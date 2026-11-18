@@ -1,0 +1,26 @@
+# ============================================================
+# 演示模式：零安装、零网络依赖
+# 启动： java -jar campus-activity.jar --spring.profiles.active=h2
+# 特点：内存数据库，每次启动都是干净的演示数据
+# ============================================================
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:campus;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data.sql
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+mybatis-plus:
+  configuration:
+    # 演示环境关掉 SQL 打印，控制台干净些
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
