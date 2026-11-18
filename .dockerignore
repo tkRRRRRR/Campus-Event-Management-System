@@ -1,0 +1,22 @@
+.git
+.gitignore
+.idea
+.vscode
+
+# 本地运行时与构建产物，不进镜像
+tools/
+downloads/
+target/
+upload/
+h2-data/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# 本地凭据
+config/
+
+# 文档不参与构建
+doc/
+*.md
+!README.md

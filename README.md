@@ -110,6 +110,19 @@ mvn -s scripts\settings.xml spring-boot:run "-Dspring-boot.run.profiles=h2"
 
 ---
 
+## 在线部署
+
+前端 Vercel + 后端 Render（Docker）+ 数据库 SQLPub，全部 https，详见 [doc/03-在线部署方案.md](doc/03-在线部署方案.md)。
+
+```bash
+# 后端：仓库推到 GitHub，Render 选 Blueprint，填四个 DB_* 环境变量即可
+# 前端：cd frontend && vercel --prod
+```
+
+云端库已初始化完成（MySQL 8.4.3），本地凭据放在 `config/sqlpub.env.bat`（不进 git）。
+
+---
+
 ## 演示账号
 
 | 账号 | 密码 | 角色 | 说明 |
@@ -144,14 +157,20 @@ mvn -s scripts\settings.xml spring-boot:run "-Dspring-boot.run.profiles=h2"
 ## 当前进度
 
 - [x] 工程骨架、统一返回体、全局异常、MyBatis-Plus 分页
-- [x] 数据库设计（8 张表）+ 演示数据
+- [x] 数据库设计（8 张表）+ 演示数据（74 用户 / 214 条报名，`signed_count` 与明细严格一致）
 - [x] 登录 / 注册 / 用户信息（JWT + 拦截器 + BCrypt）
-- [ ] 活动模块（发布、审核、列表、详情）
+- [x] 活动模块（发布、审核、编辑重提、取消、列表、详情、质量分、定时自动结束）
+- [x] 分类模块（列表、增删改）
 - [ ] 报名模块（并发名额控制）
 - [ ] 签到模块（签到码、补签、爽约判定）
 - [ ] 评价模块
 - [ ] 统计模块
 - [ ] 前端页面
+
+### 演示数据约定
+
+`activity.signed_count` = 该活动 `status in (1,2,4)` 的报名记录数（已报名 + 已签到 + 爽约，已取消不占名额）。
+这条约束由 `scripts/gen-demo-data.ps1` 生成时自检，改数据请改脚本重跑，不要手改 SQL。
 
 ---
 

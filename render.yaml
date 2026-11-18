@@ -1,0 +1,30 @@
+# ============================================================================
+#  Render 一键部署描述文件
+#  用法：把仓库推到 GitHub，在 Render 里 New -> Blueprint，选中本仓库即可
+#  数据库用 SQLPub 的云端 MySQL，不在这里创建
+# ============================================================================
+services:
+  - type: web
+    name: campus-activity-api
+    runtime: docker
+    plan: free
+    region: singapore          # 免费版可选 oregon / frankfurt / singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/ping
+    autoDeploy: true
+    envVars:
+      # Render 会自动注入 PORT，这里不要覆盖
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      - key: APP_JWT_SECRET
+        generateValue: true

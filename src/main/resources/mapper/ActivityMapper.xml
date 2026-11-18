@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.activity.mapper.ActivityMapper">
+
+    <!--
+        列表查询：活动 + 分类名 + 组织者名 + 当前用户的报名状态
+        注意排序只用 signed_count / start_time，不用数据库函数，H2 和 MySQL 行为一致
+    -->
+    <select id="selectPageVO" resultType="com.campus.activity.vo.ActivityListVO">
+        select
+            a.id,
+            a.title,
+            a.category_id,
+            a.cover_url,
+            a.summary,
+            a.location,
+            a.start_time,
+            a.end_time,
+            a.signup_deadline,
+            a.capacity,
+            a.signed_count,
+            a.status,
+            a.organizer_id,
+            a.create_time,
+            c.name  as category_name,
+            u.real_name as organizer_name,
+            r.status as reg_status
+        from activity a
+        left join activity_category c on c.id = a.category_id
+        left join sys_user u on u.id = a.organizer_id
+        left join activity_registration r on r.activity_id = a.id and r.user_id = #{userId}
+        <where>
+            <if test="q.categoryId != null">
+                and a.category_id = #{q.categoryId}
+            </if>
+            <if test="q.keyword != null and q.keyword != ''">
+                and (a.title like concat('%', #{q.keyword}, '%')
+                     or a.summary like concat('%', #{q.keyword}, '%'))
+            </if>
+            <if test="q.status != null">
+                and a.status = #{q.status}
+            </if>
+            <if test="q.organizerId != null">
+                and a.organizer_id = #{q.organizerId}
+            </if>
+            <if test="q.onlyOpen != null and q.onlyOpen == true">
+                and a.status = 2 and a.end_time &gt; now()
+            </if>
+        </where>
+        <choose>
+            <when test="q.sort == 'hot'">
+                order by a.signed_count desc, a.start_time asc
+            </when>
+            <otherwise>
+                order by a.start_time desc, a.id desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--
+        详情查询：把参与情况和评分一次性带出来，避免前端多次请求，
+        也避免在循环里查数据库（云端库有 20~80ms 的 RTT，N+1 会很慢）
+    -->
+    <select id="selectDetailVO" resultType="com.campus.activity.vo.ActivityDetailVO">
+        select
+            a.*,
+            c.name as category_name,
+            u.real_name as organizer_name,
+            r.status as reg_status,
+            (select count(*) from activity_registration x
+              where x.activity_id = a.id and x.status in (1, 2, 4)) as joined_count,
+            (select count(*) from activity_registration x
+              where x.activity_id = a.id and x.status = 2) as checkin_count,
+            (select count(*) from activity_registration x
+              where x.activity_id = a.id and x.status = 4) as absent_count,
+            (select count(*) from activity_registration x
+              where x.activity_id = a.id and x.status = 3) as cancel_count,
+            (select avg(x.score) from activity_review x
+              where x.activity_id = a.id) as avg_score,
+            (select count(*) from activity_review x
+              where x.activity_id = a.id) as review_count
+        from activity a
+        left join activity_category c on c.id = a.category_id
+        left join sys_user u on u.id = a.organizer_id
+        left join activity_registration r on r.activity_id = a.id and r.user_id = #{userId}
+        where a.id = #{id}
+    </select>
+
+</mapper>

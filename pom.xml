@@ -45,9 +45,8 @@
             <version>${mybatis-plus.version}</version>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.33</version>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
         <!-- 免安装演示模式：H2 内存库，MySQL 兼容模式 -->
