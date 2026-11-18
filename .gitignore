@@ -1,0 +1,32 @@
+# ===== 便携运行时（体积大，由 scripts/setup-env.ps1 生成）=====
+tools/
+downloads/
+
+# ===== Java / Maven =====
+target/
+*.class
+*.jar
+!**/maven-wrapper.jar
+*.log
+
+# ===== 前端 =====
+node_modules/
+dist/
+.npm/
+*.lock.tmp
+
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# ===== 运行产物 =====
+upload/
+h2-data/
+*.db
+*.mv.db
+
+# ===== 系统 =====
+.DS_Store
+Thumbs.db
