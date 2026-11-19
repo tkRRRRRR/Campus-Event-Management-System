@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.activity.mapper.ActivityRegistrationMapper">
+
+    <!-- 我的报名：报名记录 + 活动信息 -->
+    <select id="selectMyPage" resultType="com.campus.activity.vo.MyRegistrationVO">
+        select
+            r.id,
+            r.activity_id,
+            r.status,
+            r.signup_time,
+            r.checkin_time,
+            r.checkin_type,
+            a.title          as activity_title,
+            a.cover_url,
+            a.location,
+            a.start_time,
+            a.end_time,
+            a.signup_deadline,
+            a.status         as activity_status
+        from activity_registration r
+        join activity a on a.id = r.activity_id
+        where r.user_id = #{userId}
+        <if test="q.status != null">
+            and r.status = #{q.status}
+        </if>
+        order by r.signup_time desc, r.id desc
+    </select>
+
+    <!-- 活动报名名单：报名记录 + 学生信息 -->
+    <select id="selectMemberPage" resultType="com.campus.activity.vo.RegistrationMemberVO">
+        select
+            r.id,
+            r.user_id,
+            r.status,
+            r.signup_time,
+            r.checkin_time,
+            r.checkin_type,
+            u.username,
+            u.real_name,
+            u.student_no,
+            u.phone
+        from activity_registration r
+        join sys_user u on u.id = r.user_id
+        where r.activity_id = #{activityId}
+        <if test="q.status != null">
+            and r.status = #{q.status}
+        </if>
+        <if test="q.keyword != null and q.keyword != ''">
+            and (u.real_name like concat('%', #{q.keyword}, '%')
+                 or u.username like concat('%', #{q.keyword}, '%'))
+        </if>
+        order by r.signup_time asc, r.id asc
+    </select>
+
+    <!-- 签到名单：组织者按"已签到/未签到/爽约"筛选，支持按姓名学号搜索 -->
+    <select id="selectMemberList" resultType="com.campus.activity.vo.RegistrationMemberVO">
+        select
+            r.id,
+            r.user_id,
+            r.status,
+            r.signup_time,
+            r.checkin_time,
+            r.checkin_type,
+            u.username,
+            u.real_name,
+            u.student_no,
+            u.phone
+        from activity_registration r
+        join sys_user u on u.id = r.user_id
+        where r.activity_id = #{activityId}
+        <if test="status != null">
+            and r.status = #{status}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (u.real_name like concat('%', #{keyword}, '%')
+                 or u.username like concat('%', #{keyword}, '%')
+                 or u.student_no like concat('%', #{keyword}, '%'))
+        </if>
+        order by r.checkin_time asc, r.id asc
+    </select>
+
+</mapper>

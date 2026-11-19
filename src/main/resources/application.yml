@@ -56,6 +56,14 @@ app:
     # 生产环境请通过环境变量 APP_JWT_SECRET 覆盖
     secret: ${APP_JWT_SECRET:campus-activity-system-jwt-secret-2026-please-change}
     expire-hours: 2
+  registration:
+    # 论文对照实验开关：true 时退化为"先查后改"，会超卖。生产必须 false
+    naive: false
+  checkin:
+    # 签到码有效期（分钟）
+    code-minutes: 30
+    # 活动开始前多少分钟开放签到
+    early-minutes: 30
 
 logging:
   level:

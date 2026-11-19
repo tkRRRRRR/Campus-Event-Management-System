@@ -30,6 +30,7 @@ h2-data/
 # ===== 绯荤粺 =====
 .DS_Store
 Thumbs.db
+logs/
 
-# 本地数据库凭据
+# 浜戠鏁版嵁搴撳嚟鎹紙鏈湴绉佹湁閰嶇疆锛屼笉瑕佹彁浜わ級
 config/*.env.bat

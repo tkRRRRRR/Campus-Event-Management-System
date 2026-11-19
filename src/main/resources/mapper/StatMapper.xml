@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.activity.mapper.StatMapper">
+
+    <!-- 组织者维度：只统计自己发布的活动；organizerId 为空表示全平台 -->
+    <sql id="organizerJoin">
+        <if test="organizerId != null">
+            join activity a on a.id = r.activity_id
+        </if>
+    </sql>
+
+    <sql id="organizerWhere">
+        <if test="organizerId != null">
+            and a.organizer_id = #{organizerId}
+        </if>
+    </sql>
+
+    <select id="selectRegAgg" resultType="com.campus.activity.vo.RegistrationAggVO">
+        select
+            count(*) as total,
+            sum(case when r.status = 1 then 1 else 0 end) as signed_up,
+            sum(case when r.status = 2 then 1 else 0 end) as checked,
+            sum(case when r.status = 3 then 1 else 0 end) as canceled,
+            sum(case when r.status = 4 then 1 else 0 end) as absent,
+            sum(case when r.status = 5 then 1 else 0 end) as pending
+        from activity_registration r
+        <include refid="organizerJoin"/>
+        where 1 = 1
+        <include refid="organizerWhere"/>
+    </select>
+
+    <select id="selectReviewAgg" resultType="com.campus.activity.vo.ReviewAggVO">
+        select count(*) as total, coalesce(avg(rv.score), 0) as avg_score
+        from activity_review rv
+        <if test="organizerId != null">
+            join activity a on a.id = rv.activity_id
+        </if>
+        where 1 = 1
+        <if test="organizerId != null">
+            and a.organizer_id = #{organizerId}
+        </if>
+    </select>
+
+    <select id="selectCategoryStat" resultType="com.campus.activity.vo.CategoryStatVO">
+        select
+            c.id as category_id,
+            c.name as name,
+            (select count(*) from activity a
+              where a.category_id = c.id and a.status &lt;&gt; 0
+              <if test="organizerId != null">and a.organizer_id = #{organizerId}</if>
+            ) as activity_count,
+            (select count(*) from activity_registration r
+              join activity a2 on a2.id = r.activity_id
+              where a2.category_id = c.id and r.status in (1, 2, 4)
+              <if test="organizerId != null">and a2.organizer_id = #{organizerId}</if>
+            ) as registration_count
+        from activity_category c
+        order by registration_count desc, c.id asc
+    </select>
+
+    <select id="selectTopActivities" resultType="com.campus.activity.vo.TopActivityVO">
+        select
+            a.id as id,
+            a.title as title,
+            c.name as category_name,
+            a.capacity as capacity,
+            a.signed_count as signed_count,
+            a.status as status,
+            (select count(*) from activity_registration r
+              where r.activity_id = a.id and r.status in (1, 2, 4)) as joined_count
+        from activity a
+        left join activity_category c on c.id = a.category_id
+        <where>
+            <if test="organizerId != null">a.organizer_id = #{organizerId}</if>
+        </where>
+        order by joined_count desc, a.id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectRegTimes" resultType="com.campus.activity.vo.RegistrationTimeVO">
+        select r.signup_time as signup_time, r.checkin_time as checkin_time
+        from activity_registration r
+        <if test="organizerId != null">
+            join activity a on a.id = r.activity_id
+        </if>
+        where (r.signup_time &gt;= #{start} or r.checkin_time &gt;= #{start})
+        <if test="organizerId != null">
+            and a.organizer_id = #{organizerId}
+        </if>
+    </select>
+
+</mapper>

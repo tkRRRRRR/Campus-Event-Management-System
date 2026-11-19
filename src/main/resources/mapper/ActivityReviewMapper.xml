@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.activity.mapper.ActivityReviewMapper">
+
+    <sql id="reviewColumns">
+        r.id,
+        r.activity_id,
+        r.user_id,
+        r.score,
+        r.content,
+        r.anonymous,
+        r.create_time,
+        a.title as activity_title,
+        u.real_name as user_name
+    </sql>
+
+    <!-- 活动评价列表 -->
+    <select id="selectPageVO" resultType="com.campus.activity.vo.ReviewVO">
+        select
+        <include refid="reviewColumns"/>
+        from activity_review r
+        join activity a on a.id = r.activity_id
+        left join sys_user u on u.id = r.user_id
+        where r.activity_id = #{activityId}
+        order by r.create_time desc, r.id desc
+    </select>
+
+    <!-- 我的评价 -->
+    <select id="selectMyPage" resultType="com.campus.activity.vo.ReviewVO">
+        select
+        <include refid="reviewColumns"/>
+        from activity_review r
+        join activity a on a.id = r.activity_id
+        left join sys_user u on u.id = r.user_id
+        where r.user_id = #{userId}
+        order by r.create_time desc, r.id desc
+    </select>
+
+</mapper>

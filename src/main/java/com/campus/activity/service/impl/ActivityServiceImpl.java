@@ -185,7 +185,7 @@ public class ActivityServiceImpl implements ActivityService {
                 new LambdaQueryWrapper<ActivityRegistration>()
                         .eq(ActivityRegistration::getActivityId, id)
                         .in(ActivityRegistration::getStatus,
-                                Constants.REG_SIGNED_UP, Constants.REG_CHECKED_IN));
+                                Constants.REG_SIGNED_UP, Constants.REG_CHECKED_IN, Constants.REG_PENDING));
         for (ActivityRegistration registration : registrations) {
             sendNotice(registration.getUserId(),
                     "活动已取消",
