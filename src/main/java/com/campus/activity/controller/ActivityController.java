@@ -92,6 +92,10 @@ public class ActivityController {
     @PutMapping("/{id}/audit")
     @RequireRole(Constants.ROLE_ADMIN)
     public Result<Void> audit(@PathVariable Integer id, @Validated @RequestBody ActivityAuditDTO dto) {
+        // 兼容前端用 reason 传驳回理由的写法
+        if (dto.getRemark() == null || dto.getRemark().trim().isEmpty()) {
+            dto.setRemark(dto.getReason());
+        }
         activityService.audit(id, dto, UserContext.getUserId());
         return Result.ok(Boolean.TRUE.equals(dto.getPass()) ? "已通过审核" : "已驳回", null);
     }

@@ -28,6 +28,13 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public List<ActivityCategory> listAll() {
+        return categoryMapper.selectList(new LambdaQueryWrapper<ActivityCategory>()
+                .orderByAsc(ActivityCategory::getSort)
+                .orderByAsc(ActivityCategory::getId));
+    }
+
+    @Override
     public void create(ActivityCategory category) {
         if (category.getName() == null || category.getName().trim().isEmpty()) {
             throw new BusinessException("分类名称不能为空");
@@ -51,6 +58,22 @@ public class CategoryServiceImpl implements CategoryService {
         }
         if (categoryMapper.selectById(category.getId()) == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "分类不存在");
+        }
+        if (category.getName() != null) {
+            String name = category.getName().trim();
+            if (name.isEmpty()) {
+                throw new BusinessException("分类名称不能为空");
+            }
+            Long dup = categoryMapper.selectCount(new LambdaQueryWrapper<ActivityCategory>()
+                    .eq(ActivityCategory::getName, name)
+                    .ne(ActivityCategory::getId, category.getId()));
+            if (dup != null && dup > 0) {
+                throw new BusinessException("该分类已存在");
+            }
+            category.setName(name);
+        }
+        if (category.getStatus() != null && category.getStatus() != 0 && category.getStatus() != 1) {
+            throw new BusinessException("分类状态只能是 0 或 1");
         }
         categoryMapper.updateById(category);
     }

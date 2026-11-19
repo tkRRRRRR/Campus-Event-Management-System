@@ -64,7 +64,9 @@ public class RegistrationController {
     public Result<Void> audit(@PathVariable Integer registrationId,
                               @RequestBody Map<String, Object> body) {
         boolean pass = Boolean.TRUE.equals(body.get("pass"));
-        registrationService.auditSignup(registrationId, pass, UserContext.getUserId());
+        Object reason = body.get("reason") != null ? body.get("reason") : body.get("remark");
+        registrationService.auditSignup(registrationId, pass,
+                reason == null ? null : String.valueOf(reason), UserContext.getUserId());
         return Result.ok(pass ? "已通过报名" : "已拒绝报名", null);
     }
 }

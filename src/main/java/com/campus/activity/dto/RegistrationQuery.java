@@ -17,4 +17,7 @@ public class RegistrationQuery {
 
     /** 按姓名或学号搜索（组织者名单用） */
     private String keyword;
+
+    /** 活动状态筛选（学生"我的报名"按活动阶段过滤用） */
+    private Integer activityStatus;
 }

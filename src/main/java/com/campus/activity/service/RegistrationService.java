@@ -20,6 +20,6 @@ public interface RegistrationService {
     PageResult<RegistrationMemberVO> memberPage(Integer activityId, RegistrationQuery query,
                                                 Integer currentUserId, boolean admin);
 
-    /** 组织者审核报名（活动开启"报名需审核"时才会走到这里） */
-    void auditSignup(Integer registrationId, boolean pass, Integer organizerId);
+    /** 组织者审核报名（活动开启"报名需审核"时才会走到这里），reason 用于驳回说明 */
+    void auditSignup(Integer registrationId, boolean pass, String reason, Integer organizerId);
 }

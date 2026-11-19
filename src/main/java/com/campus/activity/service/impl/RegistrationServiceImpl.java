@@ -210,7 +210,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void auditSignup(Integer registrationId, boolean pass, Integer organizerId) {
+    public void auditSignup(Integer registrationId, boolean pass, String reason, Integer organizerId) {
         ActivityRegistration registration = registrationMapper.selectById(registrationId);
         if (registration == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "报名记录不存在");
@@ -240,8 +240,11 @@ public class RegistrationServiceImpl implements RegistrationService {
                     Constants.NOTICE_AUDIT);
         } else {
             update.setStatus(Constants.REG_CANCELED);
+            String tail = (reason == null || reason.trim().isEmpty())
+                    ? ""
+                    : "，原因：" + reason.trim();
             sendNotice(registration.getUserId(), "报名未通过",
-                    "你报名的「" + activity.getTitle() + "」未通过组织者审核。",
+                    "你报名的「" + activity.getTitle() + "」未通过组织者审核" + tail + "。",
                     Constants.NOTICE_AUDIT);
         }
         registrationMapper.updateById(update);

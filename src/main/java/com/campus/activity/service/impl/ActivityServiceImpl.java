@@ -111,8 +111,11 @@ public class ActivityServiceImpl implements ActivityService {
         validateTime(dto);
 
         Activity old = getOwnedActivity(dto.getId(), organizerId);
-        if (old.getStatus() != Constants.ACTIVITY_DRAFT && old.getStatus() != Constants.ACTIVITY_REJECTED) {
-            throw new BusinessException("只有草稿或已驳回的活动才能编辑");
+        // 草稿可继续改、待审核可改后重新提交、被驳回可修改后重新提交
+        if (old.getStatus() != Constants.ACTIVITY_DRAFT
+                && old.getStatus() != Constants.ACTIVITY_PENDING
+                && old.getStatus() != Constants.ACTIVITY_REJECTED) {
+            throw new BusinessException("只有草稿、待审核或已驳回的活动才能编辑");
         }
         // 已经有人报名时不允许把人数上限改到低于已报名人数
         if (dto.getCapacity() < old.getSignedCount()) {
@@ -173,6 +176,9 @@ public class ActivityServiceImpl implements ActivityService {
         Activity activity = getOwnedActivity(id, organizerId);
         if (activity.getStatus() != Constants.ACTIVITY_PUBLISHED) {
             throw new BusinessException("只有已发布的活动才能取消");
+        }
+        if (activity.getStartTime() != null && !activity.getStartTime().isAfter(LocalDateTime.now())) {
+            throw new BusinessException("活动已开始，无法取消");
         }
 
         Activity update = new Activity();

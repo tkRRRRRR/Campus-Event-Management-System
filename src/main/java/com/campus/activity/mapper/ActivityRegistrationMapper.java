@@ -41,7 +41,8 @@ public interface ActivityRegistrationMapper extends BaseMapper<ActivityRegistrat
             "(select count(*) from activity_registration r where r.activity_id = a.id and r.status = 2) as checked_count, " +
             "(select count(*) from activity_registration r where r.activity_id = a.id and r.status = 4) as absent_count, " +
             "(select count(*) from activity_registration r where r.activity_id = a.id and r.status = 1) as waiting_count, " +
-            "(select count(*) from activity_registration r where r.activity_id = a.id and r.status = 5) as pending_count " +
+            "(select count(*) from activity_registration r where r.activity_id = a.id and r.status = 5) as pending_count, " +
+            "(select count(*) from activity_registration r where r.activity_id = a.id and r.status = 3) as cancel_count " +
             "from activity a where a.id = #{activityId}")
     CheckinStatVO selectStat(@Param("activityId") Integer activityId);
 }

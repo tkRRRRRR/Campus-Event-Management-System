@@ -22,6 +22,7 @@
             a.status,
             a.organizer_id,
             a.create_time,
+            a.audit_remark,
             c.name  as category_name,
             u.real_name as organizer_name,
             r.status as reg_status

@@ -30,6 +30,13 @@ public class CategoryController {
         return Result.ok(categoryService.listEnabled());
     }
 
+    /** 管理员维护分类时需要看到停用的分类，否则停用后就"消失"了 */
+    @GetMapping("/all")
+    @RequireRole(Constants.ROLE_ADMIN)
+    public Result<List<ActivityCategory>> all() {
+        return Result.ok(categoryService.listAll());
+    }
+
     @PostMapping
     @RequireRole(Constants.ROLE_ADMIN)
     public Result<Void> create(@RequestBody ActivityCategory category) {

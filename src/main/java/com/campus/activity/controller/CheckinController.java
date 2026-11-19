@@ -65,9 +65,10 @@ public class CheckinController {
     @RequireRole({Constants.ROLE_ORGANIZER, Constants.ROLE_ADMIN})
     public Result<PageResult<RegistrationMemberVO>> list(@PathVariable Integer activityId,
                                                          @RequestParam(required = false) Integer status,
+                                                         @RequestParam(required = false) String keyword,
                                                          @RequestParam(defaultValue = "1") Integer pageNum,
                                                          @RequestParam(defaultValue = "10") Integer pageSize) {
-        return Result.ok(checkinService.memberPage(activityId, status, pageNum, pageSize,
+        return Result.ok(checkinService.memberPage(activityId, status, keyword, pageNum, pageSize,
                 UserContext.getUserId(), UserContext.isAdmin()));
     }
 
@@ -81,9 +82,10 @@ public class CheckinController {
     /** 提前结束活动并判定爽约（演示用，正常由定时任务触发） */
     @PostMapping("/{activityId}/finish")
     @RequireRole({Constants.ROLE_ORGANIZER, Constants.ROLE_ADMIN})
-    public Result<Void> finish(@PathVariable Integer activityId) {
+    public Result<Integer> finish(@PathVariable Integer activityId) {
         int absent = checkinService.finishAndMarkAbsent(
                 activityId, UserContext.getUserId(), UserContext.isAdmin());
-        return Result.ok("活动已结束，爽约 " + absent + " 人", null);
+        // data 返回爽约人数，前端可以直接提示"本次爽约 N 人"
+        return Result.ok("活动已结束，爽约 " + absent + " 人", absent);
     }
 }

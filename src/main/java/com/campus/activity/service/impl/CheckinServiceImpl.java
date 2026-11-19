@@ -215,14 +215,14 @@ public class CheckinServiceImpl implements CheckinService {
     }
 
     @Override
-    public PageResult<RegistrationMemberVO> memberPage(Integer activityId, Integer status,
+    public PageResult<RegistrationMemberVO> memberPage(Integer activityId, Integer status, String keyword,
                                                        Integer pageNum, Integer pageSize,
                                                        Integer operatorId, boolean admin) {
         checkOwner(activityId, operatorId, admin);
         int num = pageNum == null || pageNum < 1 ? 1 : pageNum;
         int size = pageSize == null || pageSize < 1 ? 10 : Math.min(pageSize, 100);
         Page<RegistrationMemberVO> page = new Page<>(num, size);
-        registrationMapper.selectMemberList(page, activityId, status, null);
+        registrationMapper.selectMemberList(page, activityId, status, keyword);
         return PageResult.of(page);
     }
 

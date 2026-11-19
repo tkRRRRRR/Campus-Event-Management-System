@@ -23,8 +23,8 @@ public interface CheckinService {
     /** 组织者手动补签 */
     void manualCheckin(Integer registrationId, Integer operatorId, boolean admin);
 
-    /** 签到名单（复用报名名单，按状态过滤） */
-    PageResult<RegistrationMemberVO> memberPage(Integer activityId, Integer status,
+    /** 签到名单（复用报名名单，按状态过滤，keyword 支持姓名/用户名/学号） */
+    PageResult<RegistrationMemberVO> memberPage(Integer activityId, Integer status, String keyword,
                                                 Integer pageNum, Integer pageSize,
                                                 Integer operatorId, boolean admin);
 

@@ -9,6 +9,9 @@ public interface CategoryService {
     /** 启用中的分类，按 sort 升序 */
     List<ActivityCategory> listEnabled();
 
+    /** 全部分类（含停用），管理员维护时使用 */
+    List<ActivityCategory> listAll();
+
     void create(ActivityCategory category);
 
     void update(ActivityCategory category);

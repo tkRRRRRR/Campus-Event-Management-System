@@ -30,6 +30,9 @@ public class CheckinStatVO {
     /** 待审核报名人数 */
     private Integer pendingCount;
 
+    /** 已取消报名人数 */
+    private Integer cancelCount;
+
     /** 签到率 = 已签到 / 应到人数，保留两位小数 */
     private BigDecimal checkinRate;
 }

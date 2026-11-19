@@ -12,6 +12,8 @@ target/
 # ===== 前端 =====
 node_modules/
 dist/
+# 单 jar 打包时由 scripts/build-all.ps1 从 web/dist 复制而来
+src/main/resources/static/
 .npm/
 *.lock.tmp
 

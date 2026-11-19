@@ -17,12 +17,19 @@
             a.start_time,
             a.end_time,
             a.signup_deadline,
-            a.status         as activity_status
+            a.status         as activity_status,
+            case when exists (
+                select 1 from activity_review v
+                where v.activity_id = r.activity_id and v.user_id = r.user_id
+            ) then 1 else 0 end as reviewed
         from activity_registration r
         join activity a on a.id = r.activity_id
         where r.user_id = #{userId}
         <if test="q.status != null">
             and r.status = #{q.status}
+        </if>
+        <if test="q.activityStatus != null">
+            and a.status = #{q.activityStatus}
         </if>
         order by r.signup_time desc, r.id desc
     </select>
@@ -48,7 +55,8 @@
         </if>
         <if test="q.keyword != null and q.keyword != ''">
             and (u.real_name like concat('%', #{q.keyword}, '%')
-                 or u.username like concat('%', #{q.keyword}, '%'))
+                 or u.username like concat('%', #{q.keyword}, '%')
+                 or u.student_no like concat('%', #{q.keyword}, '%'))
         </if>
         order by r.signup_time asc, r.id asc
     </select>

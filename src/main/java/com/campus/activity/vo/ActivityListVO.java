@@ -50,4 +50,7 @@ public class ActivityListVO {
 
     /** 剩余名额，避免前端自己算 */
     private Integer remaining;
+
+    /** 审核意见（被驳回时展示给组织者，避免前端为每行再请求一次详情） */
+    private String auditRemark;
 }

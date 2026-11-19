@@ -37,4 +37,7 @@ public class MyRegistrationVO {
     private LocalDateTime checkinTime;
 
     private Integer checkinType;
+
+    /** 是否已评价（前端据此决定"去评价"按钮是否显示） */
+    private Boolean reviewed;
 }
