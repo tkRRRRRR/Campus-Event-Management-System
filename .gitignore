@@ -28,6 +28,8 @@ upload/
 h2-data/
 *.db
 *.mv.db
+# 便携包（内置 JRE，体积上百 MB，由 scripts/make-release.ps1 生成）
+release/
 
 # ===== 系统 =====
 .DS_Store
