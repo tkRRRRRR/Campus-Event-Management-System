@@ -51,20 +51,22 @@ util         JWT 工具、当前用户上下文
 Activity activity = activityMapper.selectById(activityId);
 if (activity == null) throw new BusinessException("活动不存在");
 if (activity.getStatus() != Constants.ACTIVITY_PUBLISHED)
-    throw new BusinessException("该活动当前不可报名");
+    throw new BusinessException("该活动当前未开放报名");
 // 2. 报名截止与开始时间
-if (LocalDateTime.now().isAfter(activity.getSignupDeadline()))
-    throw new BusinessException("报名已截止");
-if (LocalDateTime.now().isAfter(activity.getStartTime()))
-    throw new BusinessException("活动已开始，无法报名");
+if (now.isAfter(activity.getSignupDeadline()))
+    throw new BusinessException("报名已于 " + DATE_FORMAT.format(activity.getSignupDeadline()) + " 截止");
+if (!now.isBefore(activity.getStartTime()))
+    throw new BusinessException("活动已经开始，无法报名");
 // 3. 是否被限制报名
 SysUser user = userMapper.selectById(userId);
-if (user.getBanUntil() != null && user.getBanUntil().isAfter(LocalDateTime.now()))
+if (user.getBanUntil() != null && user.getBanUntil().isAfter(now))
     throw new BusinessException("因多次爽约，你被限制报名至 " + ...);
-// 4. 是否重复报名
-ActivityRegistration old = registrationMapper.selectOne(...);
-if (old != null && old.getStatus() != Constants.REG_CANCELED)
+// 4. 是否重复报名（1/2/5 拒绝，4 爽约拒绝，3 已取消则复用原记录）
+ActivityRegistration exist = registrationMapper.selectOne(...);
+if (exist != null && (status == 1 || status == 2 || status == 5))
     throw new BusinessException("你已报名该活动，请勿重复提交");
+if (exist != null && status == 4)
+    throw new BusinessException("你上次爽约了该活动，无法再次报名");
 // 5. 命中名额
 int affected = activityMapper.increaseSignedCount(activityId);
 if (affected != 1) throw new BusinessException("名额已满，报名失败");
@@ -76,7 +78,7 @@ if (affected != 1) throw new BusinessException("名额已满，报名失败");
 
 ### 5.2.4 签到实现
 
-签到码的生成、查询、校验集中在签到服务中。生成时先查是否存在未过期且属于该活动的码，有则复用；否则生成新码并写入活动的 `checkin_code`、`checkin_code_expire` 字段（实际实现中复用了活动表的扩展字段，避免为此单建一张表）。有效期取配置的分钟数，并与活动结束时间取较小值。
+签到码的生成、查询、校验集中在签到服务中。生成时先查是否存在未过期且属于该活动的码，有则复用；否则生成新码并写入活动的 `checkin_code`、`code_expire_time` 字段（实际实现中复用了活动表，避免为此单建一张表）。有效期取配置的分钟数，并与活动结束时间取较小值。
 
 学生签到时，服务端依次校验活动存在、签到码非空且有效、码值匹配、未过期、在签到窗口内、报名记录存在且状态为"已报名"、尚未签到，最后用条件更新 `set status = 2, checkin_time = now where id = ? and status = 1` 完成状态流转。使用条件更新而非先查后改，是为了防止学生连点两次导致重复签到。
 
@@ -118,7 +120,7 @@ if (affected != 1) throw new BusinessException("名额已满，报名失败");
 
 **（3）便携包。** 为了让系统能在没有装 Java 和数据库的电脑上直接运行，打包脚本把 jar、JDK 自带的 JRE、建表脚本和启动批处理组装成一个目录，压缩后约 66 MB。启动脚本用相对路径定位内置的 `java.exe`，以 H2 内存库启动，双击即用。这一形态主要用于答辩现场和交给评审老师试用。
 
-**（4）云端。** 后端以 Docker 镜像部署到支持容器的云平台，通过环境变量注入数据库地址与密钥；前端静态资源部署到静态托管平台。由于前后端分属不同域名，需要在后端开启 CORS 并允许携带 `Authorization` 头。
+**（4）云端。** 后端以 Docker 镜像部署到支持容器的云平台，通过环境变量注入数据库地址与密钥；前端静态资源部署到静态托管平台。由于前后端分属不同域名，需要在后端开启 CORS 并允许携带 `Authorization` 头。这一形态给出了 Dockerfile、`render.yaml` 与环境变量模板，但本文写作期间没有实际上线，原因见 6.4 节。
 
 实现过程中遇到一个与部署相关的细节：上传头像时使用 `MultipartFile.transferTo` 传入相对路径，文件会被写到 Tomcat 的临时工作目录，而不是应用的 `upload` 目录，表现为上传成功但访问 404。改为先取 `getAbsoluteFile()` 再写入后问题解决。
 
@@ -178,9 +180,9 @@ if (affected != 1) throw new BusinessException("名额已满，报名失败");
 
 测试在开发机上进行，浏览器使用 Chrome，接口测试借助 PowerShell 脚本直接调用 HTTP 接口，压测使用自行编写的 Java 程序（不依赖第三方库，用 `HttpURLConnection` 发请求、`CountDownLatch` 控制同时起跑）。
 
-测试分为三部分：功能测试覆盖 8 个模块的主要流程与异常分支，共 98 条用例，逐条记录预期与实际结果；并发测试针对报名环节做对照实验；部署测试验证单机、便携、云端三种形态能否正常启动与访问。
+测试分为三部分：功能测试覆盖 8 个模块的主要流程与异常分支，共 98 条用例，逐条记录预期与实际结果；并发测试针对报名环节做对照实验；部署测试验证单机 jar 与便携包能否在干净环境启动，以及连云端 MySQL 时读写是否正常。
 
-测试数据由脚本生成：74 个用户（72 名学生、1 名组织者、1 名管理员）、9 场活动（覆盖草稿、待审核、报名中、已驳回、已结束五种状态）、239 条报名记录（含已报名、已签到、已取消、爽约）、7 条评价。生成脚本会自检每个活动的 `signed_count` 是否等于明细中的有效报名数，不一致则中止，防止演示数据本身出错。
+测试数据由脚本生成：74 个用户（72 名学生、1 名组织者、1 名管理员）、8 场种子活动；测试中又临时建了 1 场用于演示签到，所以截图里的活动总数是 9；报名记录 239 条、评价 7 条。生成脚本会自检每个活动的 `signed_count` 是否等于明细中的有效报名数，不一致就中止。这一点在早期版本上真出过问题：手写数据里计数与明细对不上，页面的进度条和名单对不上号，后来改成脚本生成加自检才稳定。
 
 ## 6.2 功能测试
 
@@ -245,7 +247,7 @@ if (affected != 1) throw new BusinessException("名额已满，报名失败");
 
 ## 6.4 测试结论
 
-功能层面，系统覆盖了需求文档中的全部功能点，98 条用例全部通过，异常分支的提示信息具体可读，未出现白屏或后端堆栈外泄。并发层面，报名环节在 50 并发下未出现超卖，计数与明细一致，响应时间在可接受范围内。部署层面，单机 jar、便携包、云端三种形态均验证通过：便携包在没有安装 Java 的目录下用内置 JRE 启动成功，首页返回 200；云端实例通过环境变量注入数据库连接后正常读写。
+功能层面，系统覆盖了需求中的全部功能点，98 条用例全部通过，异常分支的提示信息具体可读，没有出现白屏或堆栈外泄。并发层面，报名环节在 50 并发下没有超卖，计数与明细一致，响应时间可以接受。部署层面，单机 jar 与便携包都在本机实测过：便携包在没有安装 Java 的目录下用内置 JRE 启动成功，首页返回 200；连云端 MySQL 8.4 的那一版也跑通过增删改查。要说明的是，应用尚未真正部署到公网，云端形态目前只有 Dockerfile、`render.yaml` 与配置说明，这一步留到答辩之后再补。
 
 系统仍存在不足：令牌签发后无法立即失效；统计接口在全量数据下未做缓存；缺少操作日志与审计功能。这些问题不影响当前规模下的使用，但在正式推广前需要补齐。
 
@@ -255,13 +257,13 @@ if (affected != 1) throw new BusinessException("名额已满，报名失败");
 
 本文围绕校园活动的全流程管理，完成了一个基于 Spring Boot 的活动管理系统。主要工作可以概括为四个方面。
 
-第一，梳理了校园活动的业务流程，抽象出学生、组织者、管理员三类角色，明确了活动从草稿到结束的六种状态及其流转条件，形成了覆盖发布、审核、报名、签到、评价、统计的完整闭环。
+第一，把校园活动的流程捋清楚了：学生、组织者、管理员各自能做什么，活动从草稿到结束要经过哪些状态，每一步由谁触发。这份梳理最后落成了 8 张表与 42 个接口，也成了后面写测试用例的依据。
 
-第二，针对报名环节的超卖问题，采用数据库条件更新实现名额原子扣减，并用唯一索引防重复报名，两者分工明确。对照实验显示，在 50 并发抢 10 个名额的场景下，该方案的报名成功数与明细、计数三者完全一致，而常规的"先查后改"写法超卖 40 人、计数失真 44。
+第二，针对报名环节的超卖问题，用数据库条件更新实现名额原子扣减，用唯一索引防重复报名，两者分工明确。对照实验显示，50 并发抢 10 个名额时，报名成功数、明细与计数三者一致；常规的"先查后改"写法则超卖 40 人，计数比明细少 44。
 
-第三，设计了限时签到码、爽约累计与封禁、活动质量分三项机制。签到码降低了现场签到的组织成本，爽约机制对"报名不来"形成了约束，质量分则把签到率、评分与完成率折算成一个直观的数字，供学生参考。
+第三，设计了限时签到码、爽约累计与封禁、活动质量分三项机制。签到码让现场签到不再依赖纸笔，爽约机制对"报了名不来"形成了实际约束，质量分把签到率、评分与完成率折算成一个数字，供学生参考。
 
-第四，完成了系统的工程化落地，包括 8 个业务模块、40 余个接口、19 个页面、四套初始化脚本与三种部署形态。便携包把 Java 运行时一并打包，使系统可以在未配置开发环境的电脑上直接运行。
+第四，完成了工程落地：8 个业务模块、42 个接口、19 个页面、三份初始化脚本，以及四种运行形态——开发、单机 jar、便携包、云端配置，其中前三种实际跑通过。便携包把 JRE 一起打包，在没有配过开发环境的电脑上双击即可启动。
 
 ## 7.2 不足与展望
 

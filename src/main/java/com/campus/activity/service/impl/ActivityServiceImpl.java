@@ -63,6 +63,8 @@ public class ActivityServiceImpl implements ActivityService {
 
     /**
      * 质量分 = 签到率 × 40 + 评分归一化 × 40 + 完成率 × 20
+     * 签到率 = 已签到 / 报名人数；评分归一化 = (均分 - 1) / 4，把 1~5 星映射到 0~1；
+     * 完成率 = 1 - 取消率，即报名后没有取消的比例。
      * 没有报名数据时记 0，避免除零；没有评价时评分项按 0 计算。
      */
     private double calcQualityScore(ActivityDetailVO vo) {
@@ -73,7 +75,7 @@ public class ActivityServiceImpl implements ActivityService {
             return 0.0;
         }
         double checkinRate = (double) checkin / joined;
-        double scoreNorm = vo.getAvgScore() == null ? 0.0 : vo.getAvgScore() / 5.0;
+        double scoreNorm = vo.getAvgScore() == null ? 0.0 : (vo.getAvgScore() - 1) / 4.0;
         double cancelRate = (double) cancel / (joined + cancel);
         double raw = checkinRate * 40 + scoreNorm * 40 + (1 - cancelRate) * 20;
         return Math.round(raw * 10) / 10.0;

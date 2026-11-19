@@ -72,9 +72,9 @@ def draw_quality():
     d = ImageDraw.Draw(img)
     d.text((70, 40), "活动质量分构成", font=font(42, True), fill=(31, 58, 52))
     items = [
-        ("签到率", "40", PRIMARY, "实际到场 / 应到场"),
-        ("评分归一化", "40", RGBColor(0x4E, 0x9A, 0x86), "(均分 − 1) / 4"),
-        ("完成率", "20", ORANGE, "正常结束 / 报名人数"),
+        ("签到率", "40", PRIMARY, "已签到 / 报名人数"),
+        ("评分归一化", "40", RGBColor(0x4E, 0x9A, 0x86), "(均分 − 1) / 4，映射到 0~1"),
+        ("完成率", "20", ORANGE, "1 − 取消率"),
     ]
     for i, (name, val, c, desc) in enumerate(items):
         y = 170 + i * 170
@@ -359,7 +359,7 @@ def build():
          Inches(8.55), Inches(2.5), Inches(3.8), Inches(2.6), 14, False, GREY)
     text(s, "质量分 = 签到率 × 40 + (均分 − 1) / 4 × 40 + 完成率 × 20", Inches(0.7),
          Inches(5.55), Inches(11.9), Inches(0.5), 20, True, DARK)
-    text(s, "示例：80 人报名、60 人签到、均分 4.2、正常结束 → 30 + 32 + 20 = 82 分",
+    text(s, "示例：80 人报名、60 人签到、均分 4.2、无人取消 → 30 + 32 + 20 = 82 分",
          Inches(0.7), Inches(6.15), Inches(11.9), Inches(0.5), 15, False, GREY)
     notes(s, "质量分是为了让活动之间可比，权重可以在论文里讨论，这里给了默认值。")
 

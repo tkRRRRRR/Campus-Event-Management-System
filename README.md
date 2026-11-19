@@ -225,7 +225,7 @@ java -cp .\scripts\out ConcurrencyTest http://127.0.0.1:8080 <activityId> 1 50
 | [doc/02-接口文档.md](doc/02-接口文档.md) | 40+ 接口的入参与返回 |
 | [doc/03-在线部署方案.md](doc/03-在线部署方案.md) | Vercel + Render + SQLPub 部署 |
 | [doc/04-测试用例.md](doc/04-测试用例.md) | 98 条功能用例与并发实验 |
-| [doc/毕业论文初稿.docx](doc/毕业论文初稿.docx) | 论文初稿（39 页，约 2.2 万字） |
+| [doc/毕业论文初稿.docx](doc/毕业论文初稿.docx) | 论文初稿（43 页，约 2.6 万字） |
 | [doc/开题报告.docx](doc/开题报告.docx) | 开题报告（4 页） |
 | [doc/任务书.docx](doc/任务书.docx) | 毕业设计任务书（3 页） |
 | [doc/文献综述.docx](doc/文献综述.docx) | 文献综述（4 页，约 2100 字） |
