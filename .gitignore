@@ -38,3 +38,6 @@ logs/
 
 # 云端数据库凭据（本地私有配置，不要提交）
 config/*.env.bat
+
+# Zotero 全文缓存（仅用于本地自查，不提交）
+doc/thesis/_corpus/
