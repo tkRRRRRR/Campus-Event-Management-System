@@ -347,6 +347,17 @@ def build():
             i += 1
             continue
 
+        # 参考文献条目：悬挂缩进
+        if re.match(r"^\[\d+\]", stripped):
+            p = doc.add_paragraph()
+            p.paragraph_format.left_indent = Cm(0.74)
+            p.paragraph_format.first_line_indent = Cm(-0.74)
+            p.paragraph_format.line_spacing = 1.5
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            add_rich(p, stripped)
+            i += 1
+            continue
+
         # normal paragraph
         p = doc.add_paragraph()
         p.paragraph_format.first_line_indent = Pt(24)
