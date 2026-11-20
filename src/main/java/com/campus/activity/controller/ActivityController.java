@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -27,6 +28,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class ActivityController {
 
     private final ActivityService activityService;
+
+    /** 上传活动封面（组织者、管理员） */
+    @PostMapping("/cover")
+    @RequireRole({Constants.ROLE_ORGANIZER, Constants.ROLE_ADMIN})
+    public Result<String> uploadCover(@RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
+        return Result.ok("上传成功", activityService.uploadCover(file));
+    }
 
     /** 学生端活动列表：只看已发布且未结束的活动 */
     @GetMapping("/page")

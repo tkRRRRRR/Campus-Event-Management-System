@@ -50,6 +50,13 @@
         />
         <el-button size="small" @click="handleFilter">搜索</el-button>
         <div class="spacer"></div>
+        <el-button
+          size="small"
+          type="primary"
+          icon="el-icon-download"
+          :loading="exporting"
+          @click="handleExport"
+        >导出 Excel</el-button>
         <el-button size="small" icon="el-icon-refresh" @click="refreshAll">刷新</el-button>
       </div>
 
@@ -113,7 +120,7 @@
 
 <script>
 import { getActivity } from '@/api/activity'
-import { memberPage, auditRegistration } from '@/api/registration'
+import { memberPage, auditRegistration, exportMembers } from '@/api/registration'
 import { checkinStat, manualCheckin } from '@/api/checkin'
 import { fmtDateTime } from '@/utils/format'
 import StatusTag from '@/components/StatusTag.vue'
@@ -124,6 +131,7 @@ export default {
   data () {
     return {
       loading: false,
+      exporting: false,
       activity: {},
       stat: {},
       list: [],
@@ -202,6 +210,33 @@ export default {
     refreshAll () {
       this.loadStat()
       this.load()
+    },
+    async handleExport () {
+      if (this.exporting) return
+      this.exporting = true
+      try {
+        const params = {}
+        if (this.query.status !== '' && this.query.status !== null && this.query.status !== undefined) {
+          params.status = this.query.status
+        }
+        const keyword = (this.query.keyword || '').trim()
+        if (keyword) params.keyword = keyword
+
+        const blob = await exportMembers(this.activityId, params)
+        const url = window.URL.createObjectURL(new Blob([blob]))
+        const link = document.createElement('a')
+        link.href = url
+        link.download = (this.activity.title || '活动') + '-报名名单.xlsx'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        this.$message.success('已导出 ' + this.total + ' 条记录')
+      } catch (e) {
+        /* 错误提示已由 request 拦截器统一处理 */
+      } finally {
+        this.exporting = false
+      }
     },
     handleFilter () {
       this.query.pageNum = 1

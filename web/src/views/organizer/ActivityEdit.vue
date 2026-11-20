@@ -54,6 +54,30 @@
           </el-select>
         </el-form-item>
 
+        <el-form-item label="活动封面">
+          <div class="cover-box">
+            <img v-if="form.coverUrl" :src="resolveUrl(form.coverUrl)" class="cover-img" alt="活动封面" />
+            <div v-else class="cover-empty">未上传封面</div>
+            <div class="cover-side">
+              <el-upload
+                :show-file-list="false"
+                :http-request="handleUploadCover"
+                accept=".jpg,.jpeg,.png,.gif,.webp"
+              >
+                <el-button size="small" icon="el-icon-upload2" :loading="uploading">上传图片</el-button>
+              </el-upload>
+              <el-button
+                v-if="form.coverUrl"
+                size="small"
+                type="text"
+                class="remove-cover"
+                @click="form.coverUrl = ''"
+              >移除</el-button>
+              <div class="muted hint block">支持 jpg / jpeg / png / gif / webp，不超过 5MB；不上传时按分类显示默认色块。</div>
+            </div>
+          </div>
+        </el-form-item>
+
         <el-form-item label="活动地点" prop="location">
           <el-input v-model="form.location" maxlength="100" placeholder="请输入活动地点" />
         </el-form-item>
@@ -149,9 +173,10 @@
 </template>
 
 <script>
-import { getActivity, createActivity, updateActivity } from '@/api/activity'
+import { getActivity, createActivity, updateActivity, uploadActivityCover } from '@/api/activity'
 import { listCategories } from '@/api/category'
 import { activityStatusText } from '@/utils/format'
+import { resolveUrl } from '@/utils/request'
 
 /** 兼容性更好的时间解析：'yyyy-MM-dd HH:mm:ss' 在部分浏览器里直接 new Date 会失败 */
 function timestamp (value) {
@@ -200,6 +225,7 @@ export default {
     return {
       loadingDetail: false,
       saving: false,
+      uploading: false,
       categories: [],
       detail: {},
       form: this.createEmptyForm(),
@@ -241,6 +267,7 @@ export default {
       return {
         title: '',
         categoryId: null,
+        coverUrl: '',
         location: '',
         capacity: 50,
         needAudit: 0,
@@ -274,6 +301,7 @@ export default {
       this.form = {
         title: data.title || '',
         categoryId: data.categoryId === undefined ? null : data.categoryId,
+        coverUrl: data.coverUrl || '',
         location: data.location || '',
         capacity: data.capacity || 50,
         needAudit: data.needAudit === 1 ? 1 : 0,
@@ -295,6 +323,7 @@ export default {
       const payload = {
         title: (this.form.title || '').trim(),
         categoryId: this.form.categoryId,
+        coverUrl: this.form.coverUrl || '',
         location: (this.form.location || '').trim(),
         capacity: Number(this.form.capacity),
         needAudit: this.form.needAudit ? 1 : 0,
@@ -325,6 +354,27 @@ export default {
     },
     goBack () {
       this.$router.push('/organizer/activities')
+    },
+    /** el-upload 自定义上传：走后端 /api/activity/cover，成功后把返回路径写回表单 */
+    async handleUploadCover (option) {
+      if (this.uploading) return
+      const file = option.file
+      if (file.size > 5 * 1024 * 1024) {
+        this.$message.error('图片不能超过 5MB')
+        return
+      }
+      this.uploading = true
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+        const url = await uploadActivityCover(formData)
+        this.form.coverUrl = url
+        this.$message.success('封面已上传')
+      } catch (e) {
+        /* 错误提示已由 request 拦截器统一处理 */
+      } finally {
+        this.uploading = false
+      }
     }
   }
 }
@@ -347,5 +397,43 @@ export default {
 }
 .form-footer .spacer {
   flex: 1;
+}
+.cover-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.cover-img {
+  width: 168px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e6ebee;
+}
+.cover-empty {
+  width: 168px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9aa5a1;
+  font-size: 12px;
+  border: 1px dashed #d7e0dd;
+  border-radius: 6px;
+  background: #fafcfb;
+}
+.cover-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.cover-side .hint.block {
+  margin-left: 0;
+  line-height: 1.6;
+  max-width: 380px;
+}
+.remove-cover {
+  padding: 0;
 }
 </style>

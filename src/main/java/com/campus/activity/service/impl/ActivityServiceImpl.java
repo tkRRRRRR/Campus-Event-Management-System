@@ -21,20 +21,32 @@ import com.campus.activity.vo.ActivityDetailVO;
 import com.campus.activity.vo.ActivityListVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ActivityServiceImpl implements ActivityService {
 
+    private static final List<String> COVER_EXT = Arrays.asList("jpg", "jpeg", "png", "gif", "webp");
+
     private final ActivityMapper activityMapper;
     private final ActivityRegistrationMapper registrationMapper;
     private final NoticeMapper noticeMapper;
+
+    @Value("${app.upload.path:./upload}")
+    private String uploadPath;
 
     @Override
     public PageResult<ActivityListVO> page(ActivityQuery query, Integer currentUserId) {
@@ -204,6 +216,35 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     /* ---------------- 私有方法 ---------------- */
+
+    @Override
+    public String uploadCover(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("请选择要上传的图片");
+        }
+        String original = file.getOriginalFilename() == null ? "" : file.getOriginalFilename();
+        int dot = original.lastIndexOf('.');
+        String ext = dot < 0 ? "" : original.substring(dot + 1).toLowerCase(Locale.ROOT);
+        if (!COVER_EXT.contains(ext)) {
+            throw new BusinessException("只支持 jpg/jpeg/png/gif/webp 格式的图片");
+        }
+        if (file.getSize() > 5 * 1024 * 1024L) {
+            throw new BusinessException("图片不能超过 5MB");
+        }
+        // transferTo 遇到相对路径会落到 Tomcat 临时目录下，这里一律转成绝对路径
+        File dir = new File(uploadPath, "cover").getAbsoluteFile();
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new BusinessException("创建封面目录失败");
+        }
+        String filename = "cover_" + UUID.randomUUID().toString().replace("-", "") + "." + ext;
+        try {
+            file.transferTo(new File(dir, filename));
+        } catch (IOException e) {
+            log.error("封面保存失败", e);
+            throw new BusinessException("封面保存失败，请稍后重试");
+        }
+        return "/upload/cover/" + filename;
+    }
 
     private Activity getOwnedActivity(Integer id, Integer organizerId) {
         Activity activity = activityMapper.selectById(id);

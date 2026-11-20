@@ -20,12 +20,27 @@ import com.campus.activity.vo.MyRegistrationVO;
 import com.campus.activity.vo.RegistrationMemberVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -250,7 +265,149 @@ public class RegistrationServiceImpl implements RegistrationService {
         registrationMapper.updateById(update);
     }
 
+    @Override
+    public byte[] exportMembers(Integer activityId, String keyword, Integer status,
+                                Integer currentUserId, boolean admin) {
+        Activity activity = activityMapper.selectById(activityId);
+        if (activity == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "活动不存在");
+        }
+        if (!admin && !activity.getOrganizerId().equals(currentUserId)) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "只能导出自己发布活动的报名名单");
+        }
+
+        RegistrationQuery query = new RegistrationQuery();
+        query.setStatus(status);
+        query.setKeyword(keyword);
+        Page<RegistrationMemberVO> page = new Page<>(1, 5000);
+        registrationMapper.selectMemberPage(page, activityId, query);
+        List<RegistrationMemberVO> rows = page.getRecords();
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("报名名单");
+            int widthBase = 256;
+
+            CellStyle titleStyle = workbook.createCellStyle();
+            Font titleFont = workbook.createFont();
+            titleFont.setBold(true);
+            titleFont.setFontHeightInPoints((short) 14);
+            titleStyle.setFont(titleFont);
+            titleStyle.setAlignment(HorizontalAlignment.LEFT);
+
+            CellStyle headStyle = workbook.createCellStyle();
+            Font headFont = workbook.createFont();
+            headFont.setBold(true);
+            headFont.setColor(IndexedColors.WHITE.getIndex());
+            headStyle.setFont(headFont);
+            headStyle.setFillForegroundColor(IndexedColors.DARK_GREEN.getIndex());
+            headStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headStyle.setAlignment(HorizontalAlignment.CENTER);
+            headStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+            headStyle.setBorderBottom(BorderStyle.THIN);
+            headStyle.setBorderTop(BorderStyle.THIN);
+            headStyle.setBorderLeft(BorderStyle.THIN);
+            headStyle.setBorderRight(BorderStyle.THIN);
+
+            CellStyle bodyStyle = workbook.createCellStyle();
+            bodyStyle.setAlignment(HorizontalAlignment.CENTER);
+            bodyStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+            bodyStyle.setBorderBottom(BorderStyle.THIN);
+            bodyStyle.setBorderTop(BorderStyle.THIN);
+            bodyStyle.setBorderLeft(BorderStyle.THIN);
+            bodyStyle.setBorderRight(BorderStyle.THIN);
+
+            Row title = sheet.createRow(0);
+            Cell titleCell = title.createCell(0);
+            titleCell.setCellValue(activity.getTitle() + " —— 报名名单");
+            titleCell.setCellStyle(titleStyle);
+            if (sheet.getRow(0) != null) {
+                sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
+            }
+
+            String[] headers = {"序号", "姓名", "学号", "用户名", "手机号", "报名状态", "报名时间", "签到时间", "签到方式"};
+            Row head = sheet.createRow(1);
+            head.setHeightInPoints(22);
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = head.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headStyle);
+            }
+
+            int rowIndex = 2;
+            for (int i = 0; i < rows.size(); i++) {
+                RegistrationMemberVO vo = rows.get(i);
+                Row row = sheet.createRow(rowIndex++);
+                String[] values = {
+                        String.valueOf(i + 1),
+                        nullToDash(vo.getRealName()),
+                        nullToDash(vo.getStudentNo()),
+                        nullToDash(vo.getUsername()),
+                        nullToDash(vo.getPhone()),
+                        regStatusText(vo.getStatus()),
+                        vo.getSignupTime() == null ? "-" : vo.getSignupTime().format(DATE_TIME),
+                        vo.getCheckinTime() == null ? "-" : vo.getCheckinTime().format(DATE_TIME),
+                        checkinTypeText(vo.getCheckinType())
+                };
+                for (int c = 0; c < values.length; c++) {
+                    Cell cell = row.createCell(c);
+                    cell.setCellValue(values[c]);
+                    cell.setCellStyle(bodyStyle);
+                }
+            }
+
+            int[] widths = {6, 12, 14, 16, 16, 12, 20, 20, 12};
+            for (int i = 0; i < widths.length; i++) {
+                sheet.setColumnWidth(i, widths[i] * widthBase);
+            }
+            sheet.createFreezePane(0, 2);
+            if (!rows.isEmpty()) {
+                sheet.setAutoFilter(new CellRangeAddress(1, rows.size() + 1, 0, headers.length - 1));
+            }
+
+            workbook.write(out);
+            log.info("导出报名名单: activityId={}, 行数={}", activityId, rows.size());
+            return out.toByteArray();
+        } catch (IOException e) {
+            log.error("导出报名名单失败", e);
+            throw new BusinessException("导出失败，请稍后重试");
+        }
+    }
+
     /* ---------------- 私有方法 ---------------- */
+
+    private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private String nullToDash(String value) {
+        return value == null || value.trim().isEmpty() ? "-" : value;
+    }
+
+    private String regStatusText(Integer status) {
+        if (status == null) {
+            return "-";
+        }
+        switch (status) {
+            case Constants.REG_SIGNED_UP:
+                return "已报名";
+            case Constants.REG_CHECKED_IN:
+                return "已签到";
+            case Constants.REG_CANCELED:
+                return "已取消";
+            case Constants.REG_ABSENT:
+                return "爽约";
+            case Constants.REG_PENDING:
+                return "待审核";
+            default:
+                return "未知";
+        }
+    }
+
+    private String checkinTypeText(Integer type) {
+        if (type == null) {
+            return "-";
+        }
+        return type == 2 ? "补签" : "签到码";
+    }
 
     private <T> Page<T> buildPage(RegistrationQuery query) {
         int pageNum = query.getPageNum() == null || query.getPageNum() < 1 ? 1 : query.getPageNum();

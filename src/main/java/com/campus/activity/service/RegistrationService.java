@@ -22,4 +22,8 @@ public interface RegistrationService {
 
     /** 组织者审核报名（活动开启"报名需审核"时才会走到这里），reason 用于驳回说明 */
     void auditSignup(Integer registrationId, boolean pass, String reason, Integer organizerId);
+
+    /** 导出某活动的报名名单（xlsx），组织者本人或管理员 */
+    byte[] exportMembers(Integer activityId, String keyword, Integer status,
+                         Integer currentUserId, boolean admin);
 }

@@ -21,6 +21,10 @@ service.interceptors.request.use(
 
 service.interceptors.response.use(
   response => {
+    // 文件下载：后端直接返回二进制流，跳过统一解包
+    if (response.config.responseType === 'blob') {
+      return response.data
+    }
     const res = response.data
     if (res.code === 200) {
       return res.data

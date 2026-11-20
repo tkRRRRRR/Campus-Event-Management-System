@@ -173,6 +173,6 @@ update activity
 
 接口遵循 REST 风格，统一前缀为 `/api`，统一返回结构为 `{code, msg, data}`。状态码约定为：成功 200，参数错误 400，未登录 401，无权限 403，资源不存在 404，系统异常 500。分页接口统一接收 `pageNum` 与 `pageSize` 参数，返回 `{pageNum, pageSize, total, records}` 结构。日期时间统一按 `yyyy-MM-dd HH:mm:ss` 格式序列化，避免前后端格式不一致。
 
-接口按资源划分为：认证 `/api/auth/*`、用户 `/api/user/*`、分类 `/api/category/*`、活动 `/api/activity/*`、报名 `/api/registration/*`、签到 `/api/checkin/*`、评价 `/api/review/*`、统计 `/api/stat/*`、通知 `/api/notice/*`、公告 `/api/announcement/*`、参数 `/api/config/*`，共 58 个。完整清单与字段说明见项目 `doc/02-接口文档.md`。
+接口按资源划分为：认证 `/api/auth/*`、用户 `/api/user/*`、分类 `/api/category/*`、活动 `/api/activity/*`、报名 `/api/registration/*`、签到 `/api/checkin/*`、评价 `/api/review/*`、统计 `/api/stat/*`、通知 `/api/notice/*`、公告 `/api/announcement/*`、参数 `/api/config/*`，共 60 个。完整清单与字段说明见项目 `doc/02-接口文档.md`。
 
 设计中有三处取舍。第一，列表接口不返回活动正文等大字段，以降低传输与渲染开销。第二，统计接口不接受前端传入的组织者标识，统计范围由访问令牌确定。第三，签到码查询接口采用 GET 方法且仅执行读取，签到码生成必须通过 POST 方法完成，接口职责保持单一。

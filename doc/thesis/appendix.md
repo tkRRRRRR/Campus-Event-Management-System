@@ -312,13 +312,14 @@ CREATE TABLE sys_config (
 
 # 附录 C 接口清单
 
-系统共提供 58 个业务接口，均以 /api 为前缀；除登录、注册与健康检查外，均需在请求头携带 Authorization: Bearer <token>。
+系统共提供 60 个业务接口，均以 /api 为前缀；除登录、注册与健康检查外，均需在请求头携带 Authorization: Bearer <token>。
 
 | 方法 | 路径 | 权限 | 说明 |
 |---|---|---|---|
 | POST | /api/activity | ORGANIZER | 发布；`draft=false` 直接提交审核，`draft=true` 存草稿 |
 | POST | /api/announcement | ADMIN | 新增 `{ title, content, status }` |
 | POST | /api/category | ADMIN | 新增 `{ name, sort, status }` |
+| POST | /api/activity/cover | ORGANIZER/ADMIN | `multipart/form-data`，字段名 `file`；支持 jpg/jpeg/png/gif/webp，≤5MB；返回 `{code:200, data:"/upload/cover/xxx.png"}` |
 | GET | /api/activity/my | ORGANIZER | 我发布的活动 `status, keyword, pageNum, pageSize` |
 | GET | /api/activity/page | 登录 | 已发布活动分页 |
 | GET | /api/activity/{id} | 登录 | 活动详情（含统计与当前用户报名状态） |
@@ -373,11 +374,12 @@ CREATE TABLE sys_config (
 | PUT | /api/user/{id}/reset-password | ADMIN | 重置为默认密码 `123456` |
 | PUT | /api/user/{id}/role?role=ORGANIZER | ADMIN | 改角色 |
 | PUT | /api/user/{id}/status?status=1 | ADMIN | 启用/禁用 |
+| GET | /api/registration/activity/{activityId}/export | ORGANIZER/ADMIN | 导出报名名单 xlsx，可带 `status, keyword`，返回二进制流 |
 | GET | /api/review/activity/{activityId}/stat | 登录 | 评分分布 |
 
 # 附录 D 功能测试用例
 
-共设计 98 条功能用例，均在 H2 演示库与云端 MySQL 8.4 两套环境各执行一遍，结果一致。此处列出编号、名称、预期结果与执行结果，前置条件与操作步骤见 doc/04-测试用例.md。
+共设计 104 条功能用例，均在 H2 演示库与云端 MySQL 8.4 两套环境各执行一遍，结果一致。此处列出编号、名称、预期结果与执行结果，前置条件与操作步骤见 doc/04-测试用例.md。
 
 | 编号 | 用例 | 预期结果 | 结果 |
 |---|---|---|---|
@@ -479,3 +481,9 @@ CREATE TABLE sys_config (
 | TC-96 | 系统参数修改 | 200，后续爽约按新阈值判定 | 通过 |
 | TC-97 | 参数非整数 | 400，"该参数必须是整数" | 通过 |
 | TC-98 | 参数为 0 | 400，"该参数必须大于 0" | 通过 |
+| TC-99 | 上传活动封面 | 200，返回 `/upload/cover/xxx.png`，静态访问 200 | 通过 |
+| TC-100 | 封面非法后缀 | 400，"只支持 jpg/jpeg/png/gif/webp 格式的图片" | 通过 |
+| TC-101 | 封面超过 5MB | 400，"图片不能超过 5MB" | 通过 |
+| TC-102 | 导出报名名单 | 200，xlsx 含标题行 + 表头 + 37 条记录，冻结前两行、带筛选 | 通过 |
+| TC-103 | 导出他人活动 | 403，"只能导出自己发布活动的报名名单" | 通过 |
+| TC-104 | 导出带筛选 | 仅含已签到记录 | 通过 |

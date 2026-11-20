@@ -31,3 +31,13 @@ export function auditPage (params) {
 export function auditActivity (id, data) {
   return request({ url: `/api/activity/${id}/audit`, method: 'put', data })
 }
+
+/** 上传活动封面，formData 里字段名为 file */
+export function uploadActivityCover (formData) {
+  return request({
+    url: '/api/activity/cover',
+    method: 'post',
+    data: formData,
+    timeout: 30000
+  })
+}

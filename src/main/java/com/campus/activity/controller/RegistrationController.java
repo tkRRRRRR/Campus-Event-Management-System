@@ -10,6 +10,10 @@ import com.campus.activity.util.UserContext;
 import com.campus.activity.vo.MyRegistrationVO;
 import com.campus.activity.vo.RegistrationMemberVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,6 +60,23 @@ public class RegistrationController {
                                                             RegistrationQuery query) {
         return Result.ok(registrationService.memberPage(
                 activityId, query, UserContext.getUserId(), UserContext.isAdmin()));
+    }
+
+    /** 导出报名名单（xlsx） */
+    @GetMapping("/activity/{activityId}/export")
+    @RequireRole({Constants.ROLE_ORGANIZER, Constants.ROLE_ADMIN})
+    public ResponseEntity<byte[]> export(@PathVariable Integer activityId,
+                                         @RequestParam(required = false) String keyword,
+                                         @RequestParam(required = false) Integer status) {
+        byte[] data = registrationService.exportMembers(
+                activityId, keyword, status, UserContext.getUserId(), UserContext.isAdmin());
+        String filename = "registrations-" + activityId + ".xlsx";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(data.length);
+        return new ResponseEntity<>(data, headers, HttpStatus.OK);
     }
 
     /** 组织者审核报名 */

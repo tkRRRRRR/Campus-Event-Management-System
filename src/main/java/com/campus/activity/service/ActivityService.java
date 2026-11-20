@@ -26,4 +26,7 @@ public interface ActivityService {
 
     /** 组织者取消活动 */
     void cancel(Integer id, Integer organizerId);
+
+    /** 上传活动封面，返回可访问的相对路径 */
+    String uploadCover(org.springframework.web.multipart.MultipartFile file);
 }

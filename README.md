@@ -178,6 +178,10 @@ update activity
 
 `签到率 × 40 + 评分归一化 × 40 + 完成率 × 20`，详情页实时计算，不落库。
 
+**封面与名单导出**
+
+活动封面走 `POST /api/activity/cover`（multipart，字段名 `file`，jpg/jpeg/png/gif/webp，≤5MB），返回 `/upload/cover/xxx` 写入 `coverUrl`；组织者在报名名单页点"导出 Excel"，后端用 POI 生成含标题行、表头、冻结窗口与自动筛选的 xlsx，可按状态与关键字筛选后导出，且只能导出自己发布活动的名单。
+
 ---
 
 ## 接口约定
@@ -222,9 +226,9 @@ java -cp .\scripts\out ConcurrencyTest http://127.0.0.1:8080 <activityId> 1 50
 | 文件 | 内容 |
 |---|---|
 | [doc/00-项目总体规划.md](doc/00-项目总体规划.md) | 需求、设计、进度流水、踩坑记录 |
-| [doc/02-接口文档.md](doc/02-接口文档.md) | 58 个接口的入参与返回 |
+| [doc/02-接口文档.md](doc/02-接口文档.md) | 60 个接口的入参与返回 |
 | [doc/03-在线部署方案.md](doc/03-在线部署方案.md) | Vercel + Render + SQLPub 部署 |
-| [doc/04-测试用例.md](doc/04-测试用例.md) | 98 条功能用例与并发实验 |
+| [doc/04-测试用例.md](doc/04-测试用例.md) | 104 条功能用例与并发实验 |
 | [doc/05-查重与AIGC自检报告.md](doc/05-查重与AIGC自检报告.md) | 稿内重复率、句长分布、与收集文献的重合度 |
 | [doc/06-答辩讲稿.md](doc/06-答辩讲稿.md) | 12 分钟逐页讲稿 + 时间分配表 + 压缩说法 |
 | [doc/07-答辩问答.md](doc/07-答辩问答.md) | 21 条预判问答与应答策略 |
