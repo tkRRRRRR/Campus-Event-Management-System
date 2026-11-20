@@ -13,9 +13,11 @@ import com.campus.activity.dto.ActivitySaveDTO;
 import com.campus.activity.entity.Activity;
 import com.campus.activity.entity.ActivityRegistration;
 import com.campus.activity.entity.Notice;
+import com.campus.activity.entity.SysConfig;
 import com.campus.activity.mapper.ActivityMapper;
 import com.campus.activity.mapper.ActivityRegistrationMapper;
 import com.campus.activity.mapper.NoticeMapper;
+import com.campus.activity.mapper.SysConfigMapper;
 import com.campus.activity.service.ActivityService;
 import com.campus.activity.vo.ActivityDetailVO;
 import com.campus.activity.vo.ActivityListVO;
@@ -41,9 +43,15 @@ public class ActivityServiceImpl implements ActivityService {
 
     private static final List<String> COVER_EXT = Arrays.asList("jpg", "jpeg", "png", "gif", "webp");
 
+    /** 质量分三项权重的系统参数键，权重之和不必等于 100，计算时按比例归一 */
+    private static final String CFG_WEIGHT_CHECKIN = "quality_weight_checkin";
+    private static final String CFG_WEIGHT_SCORE = "quality_weight_score";
+    private static final String CFG_WEIGHT_COMPLETE = "quality_weight_complete";
+
     private final ActivityMapper activityMapper;
     private final ActivityRegistrationMapper registrationMapper;
     private final NoticeMapper noticeMapper;
+    private final SysConfigMapper configMapper;
 
     @Value("${app.upload.path:./upload}")
     private String uploadPath;
@@ -74,7 +82,9 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     /**
-     * 质量分 = 签到率 × 40 + 评分归一化 × 40 + 完成率 × 20
+     * 质量分 = 签到率 × w1 + 评分归一化 × w2 + 完成率 × w3，三项权重取自系统参数
+     * （quality_weight_checkin / quality_weight_score / quality_weight_complete，默认 40/40/20）。
+     * 权重之和不必为 100，计算时按 w1+w2+w3 归一，结果落在 0~100。
      * 签到率 = 已签到 / 报名人数；评分归一化 = (均分 - 1) / 4，把 1~5 星映射到 0~1；
      * 完成率 = 1 - 取消率，即报名后没有取消的比例。
      * 没有报名数据时记 0，避免除零；没有评价时评分项按 0 计算。
@@ -89,8 +99,35 @@ public class ActivityServiceImpl implements ActivityService {
         double checkinRate = (double) checkin / joined;
         double scoreNorm = vo.getAvgScore() == null ? 0.0 : (vo.getAvgScore() - 1) / 4.0;
         double cancelRate = (double) cancel / (joined + cancel);
-        double raw = checkinRate * 40 + scoreNorm * 40 + (1 - cancelRate) * 20;
+        int wCheckin = configInt(CFG_WEIGHT_CHECKIN, 40);
+        int wScore = configInt(CFG_WEIGHT_SCORE, 40);
+        int wComplete = configInt(CFG_WEIGHT_COMPLETE, 20);
+        int totalWeight = wCheckin + wScore + wComplete;
+        if (totalWeight <= 0) {
+            // 参数被改成非法组合时退回默认权重，保证页面始终有分数
+            wCheckin = 40;
+            wScore = 40;
+            wComplete = 20;
+            totalWeight = 100;
+        }
+        double raw = (checkinRate * wCheckin + scoreNorm * wScore + (1 - cancelRate) * wComplete)
+                * 100.0 / totalWeight;
         return Math.round(raw * 10) / 10.0;
+    }
+
+    private int configInt(String key, int defaultValue) {
+        SysConfig config = configMapper.selectOne(new LambdaQueryWrapper<SysConfig>()
+                .eq(SysConfig::getConfigKey, key));
+        if (config == null || config.getConfigValue() == null) {
+            return defaultValue;
+        }
+        try {
+            int value = Integer.parseInt(config.getConfigValue().trim());
+            return value > 0 ? value : defaultValue;
+        } catch (NumberFormatException e) {
+            log.warn("系统参数 {} 的配置值不是整数: {}", key, config.getConfigValue());
+            return defaultValue;
+        }
     }
 
     @Override

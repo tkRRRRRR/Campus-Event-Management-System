@@ -167,7 +167,7 @@ src/main/java/com/campus/activity/service/impl/CheckinServiceImpl.java
 
 src/main/java/com/campus/activity/service/impl/ActivityServiceImpl.java
 
-签到率、评分归一化与完成率按 4:4:2 加权，读取时实时计算。
+签到率、评分归一化与完成率按系统参数中的权重（默认 4:4:2）加权，读取时实时计算。
 
 ```java
     private double calcQualityScore(ActivityDetailVO vo) {
@@ -180,7 +180,20 @@ src/main/java/com/campus/activity/service/impl/ActivityServiceImpl.java
         double checkinRate = (double) checkin / joined;
         double scoreNorm = vo.getAvgScore() == null ? 0.0 : (vo.getAvgScore() - 1) / 4.0;
         double cancelRate = (double) cancel / (joined + cancel);
-        double raw = checkinRate * 40 + scoreNorm * 40 + (1 - cancelRate) * 20;
+        int wCheckin = configInt(CFG_WEIGHT_CHECKIN, 40);
+        int wScore = configInt(CFG_WEIGHT_SCORE, 40);
+        int wComplete = configInt(CFG_WEIGHT_COMPLETE, 20);
+        int totalWeight = wCheckin + wScore + wComplete;
+        if (totalWeight <= 0) {
+            // 参数被改成非法组合时退回默认权重，保证页面始终有分数
+            wCheckin = 40;
+            wScore = 40;
+            wComplete = 20;
+            totalWeight = 100;
+        }
+        double raw = (checkinRate * wCheckin + scoreNorm * wScore + (1 - cancelRate)
+        * wComplete)
+                * 100.0 / totalWeight;
         return Math.round(raw * 10) / 10.0;
     }
 ```

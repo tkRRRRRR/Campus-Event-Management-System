@@ -135,7 +135,7 @@ def main():
         os.path.join(JAVA, "service", "impl", "ActivityServiceImpl.java"),
         r"^\s*private\s+double\s+calcQualityScore\(")
     out.append("## A.4 活动质量分计算\n")
-    out.append("src/main/java/com/campus/activity/service/impl/ActivityServiceImpl.java\n\n签到率、评分归一化与完成率按 4:4:2 加权，读取时实时计算。\n")
+    out.append("src/main/java/com/campus/activity/service/impl/ActivityServiceImpl.java\n\n签到率、评分归一化与完成率按系统参数中的权重（默认 4:4:2）加权，读取时实时计算。\n")
     out.append(code_block("java", a4))
 
     out.append("# 附录 B 数据库建表脚本\n")

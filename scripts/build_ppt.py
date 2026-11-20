@@ -82,7 +82,7 @@ def draw_quality():
         d.rectangle([70, y, 90, y + 140], fill=c)
         d.text((130, y + 30), name, font=font(36, True), fill=(31, 58, 52))
         d.text((130, y + 86), desc, font=font(24), fill=(100, 112, 108))
-        d.text((1180, y + 34), val + " 分", font=font(40, True), fill=c)
+        d.text((1180, y + 34), "权重 " + val, font=font(36, True), fill=c)
     path = os.path.join(FIG_DIR, "fig-quality.png")
     img.save(path)
     return path
@@ -350,7 +350,7 @@ def build():
 
     # 9 难点三：质量分
     s = blank(prs)
-    title(s, "关键问题三：活动质量的可比性", "签到率 40% + 评分 40% + 完成率 20%，读取时计算，不落库")
+    title(s, "关键问题三：活动质量的可比性", "默认权重 40/40/20，可在系统参数中调整；读取时计算，不落库")
     image_fit(s, q_img, Inches(0.6), Inches(1.7), Inches(7.4), Inches(3.9))
     rect(s, Inches(8.3), Inches(1.8), Inches(4.3), Inches(3.5), RGBColor(0xF6, 0xF9, 0xF8),
          RGBColor(0xDD, 0xE6, 0xE3))
@@ -358,11 +358,11 @@ def build():
     text(s, "报名人数易被刷高；\n仅看评分则样本偏差较大；\n仅看签到率难以反映内容质量。\n"
             "三项加权后，参与规模较小但组织扎实的活动\n同样能够获得较高分数。",
          Inches(8.55), Inches(2.5), Inches(3.8), Inches(2.6), 14, False, GREY)
-    text(s, "质量分 = 签到率 × 40 + (均分 − 1) / 4 × 40 + 完成率 × 20", Inches(0.7),
-         Inches(5.55), Inches(11.9), Inches(0.5), 20, True, DARK)
-    text(s, "示例：80 人报名、60 人签到、均分 4.2、无人取消 → 30 + 32 + 20 = 82 分",
+    text(s, "质量分 = (签到率×w1 + 评分归一化×w2 + 完成率×w3) ÷ (w1+w2+w3) × 100", Inches(0.7),
+         Inches(5.55), Inches(11.9), Inches(0.5), 17, True, DARK)
+    text(s, "默认权重下：80 人报名、60 人签到、均分 4.2、无人取消 → 30 + 32 + 20 = 82 分",
          Inches(0.7), Inches(6.15), Inches(11.9), Inches(0.5), 15, False, GREY)
-    notes(s, "质量分用于活动之间的横向比较，权重取默认经验值，详见论文 4.4 节。")
+    notes(s, "权重保存在系统参数中，改完立即生效；按权重之和归一，因此 6/6/3 与 40/40/20 结果相同。")
 
     # 10 界面：学生端
     s = blank(prs)

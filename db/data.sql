@@ -360,4 +360,7 @@ INSERT INTO sys_config (id, config_key, config_value, remark) VALUES
 (1, 'violation_limit', '2', '累计爽约次数上限，达到后限制报名'),
 (2, 'ban_days', '30', '触发爽约限制后的封禁天数'),
 (3, 'checkin_code_minutes', '30', '签到码有效期（分钟）'),
-(4, 'activity_default_capacity', '100', '新建活动默认人数上限');
+(4, 'activity_default_capacity', '100', '新建活动默认人数上限'),
+(5, 'quality_weight_checkin', '40', '质量分权重：签到率'),
+(6, 'quality_weight_score', '40', '质量分权重：评分归一化'),
+(7, 'quality_weight_complete', '20', '质量分权重：完成率');

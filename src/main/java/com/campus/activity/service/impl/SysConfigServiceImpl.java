@@ -26,7 +26,8 @@ public class SysConfigServiceImpl implements SysConfigService {
 
     /** 这几项必须是正整数，改错会让业务逻辑出现除零或负数判断 */
     private static final Set<String> INT_KEYS = new HashSet<>(Arrays.asList(
-            "violation_limit", "ban_days", "checkin_code_minutes", "activity_default_capacity"));
+            "violation_limit", "ban_days", "checkin_code_minutes", "activity_default_capacity",
+            "quality_weight_checkin", "quality_weight_score", "quality_weight_complete"));
 
     private final SysConfigMapper configMapper;
 

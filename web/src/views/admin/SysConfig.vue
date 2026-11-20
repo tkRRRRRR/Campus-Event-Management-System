@@ -8,7 +8,7 @@
         type="warning"
         :closable="false"
         show-icon
-        title="violation_limit（爽约次数上限）、ban_days（封禁天数）、checkin_code_minutes（签到码有效期分钟）、activity_default_capacity（默认名额）必须为正整数" />
+        title="违规与签到的四项参数（violation_limit、ban_days、checkin_code_minutes、activity_default_capacity）以及质量分三项权重（quality_weight_checkin、quality_weight_score、quality_weight_complete）必须为正整数；权重之和不必等于 100，计算时按比例归一" />
 
       <div class="toolbar">
         <span class="muted">参数保存后立即生效，共 {{ list.length }} 项</span>
@@ -49,7 +49,10 @@
 import { listConfigs, updateConfig } from '@/api/config'
 
 // 后端 SysConfigServiceImpl 中必须为正整数的参数键
-const INT_KEYS = ['violation_limit', 'ban_days', 'checkin_code_minutes', 'activity_default_capacity']
+const INT_KEYS = [
+  'violation_limit', 'ban_days', 'checkin_code_minutes', 'activity_default_capacity',
+  'quality_weight_checkin', 'quality_weight_score', 'quality_weight_complete'
+]
 
 export default {
   name: 'SysConfig',
