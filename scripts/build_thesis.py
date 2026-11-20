@@ -245,6 +245,8 @@ def add_table(doc, rows):
             preset = [2.2, 5.0, 2.7, 4.7]
         elif any("预期" in h for h in header) and cols == 4:
             preset = [1.7, 5.3, 3.9, 3.7]
+        elif cols == 6:
+            preset = [1.4, 2.6, 2.4, 3.0, 3.2, 2.0]
         elif cols == 5:
             preset = [1.7, 3.0, 2.4, 3.8, 3.7]
         elif cols == 3:
