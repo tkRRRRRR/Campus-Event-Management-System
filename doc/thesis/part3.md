@@ -281,35 +281,35 @@ if (affected != 1) throw new BusinessException("名额已满，报名失败");
 
 # 参考文献
 
-[1] 王福强. Spring Boot 揭秘：快速构建微服务体系[M]. 北京: 机械工业出版社, 2016.
+[1] 尹君. 基于B/S模式的校园社团活动管理系统设计[J]. 中国新通信, 2012, 14(20): 69.
 
-[2] Craig Walls. Spring Boot 实战[M]. 丁雪丰, 译. 北京: 人民邮电出版社, 2016.
+[2] 王蕾. 基于LAMP架构的校园微活动管理平台的设计研究[J]. 中文科技期刊数据库(全文版)自然科学, 2016(8): 191.
 
-[3] 尤雨溪. Vue.js 官方文档[EB/OL]. https://cn.vuejs.org/, 2024.
+[3] 侯颖, 李小聪, 段渭军, 等. 基于校园一卡通的学生活动智能管理系统的研究[J]. 中国教育信息化, 2011(21): 41-43.
 
-[4] 饿了么前端团队. Element UI 组件库文档[EB/OL]. https://element.eleme.cn/, 2023.
+[4] 蒋邢飞, 朱润锴, 岑岗, 等. "掌上书院"智慧校园大学生事务管理系统的设计[J]. 浙江科技学院学报, 2020, 32(2): 139-144.
 
-[5] 张海藩, 牟永敏. 软件工程导论[M]. 6 版. 北京: 清华大学出版社, 2013.
+[5] 王素美, 高志同, 王永超, 等. 基于业务管理平台的校园活动管理系统的设计与开发[C]//中国计算机用户协会网络应用分会. 2020年第二十四届网络新技术与应用年会论文集. 北京, 2020. DOI: 10.26914/c.cnkihy.2020.031833.
 
-[6] 王珊, 萨师煊. 数据库系统概论[M]. 5 版. 北京: 高等教育出版社, 2014.
+[6] 钟育伙. 基于SpringBoot+Vue的校园活动管理系统设计与实现[J]. 电子技术, 2024, 53(10): 56-57.
 
-[7] 李刚. 疯狂 Java 讲义[M]. 5 版. 北京: 电子工业出版社, 2022.
+[7] 黄智霖. 高校校园活动管理系统设计——以厦门华厦学院为例[J]. 信息技术与信息化, 2021(12): 72-74.
 
-[8] 朱忠华. MyBatis 从入门到精通[M]. 北京: 电子工业出版社, 2017.
+[8] 张银霞, 王新雨, 安凯辰, 等. 基于ASP.NET的学校活动智能管理软件系统开发[J]. 现代计算机, 2024, 30(24): 179-185.
 
-[9] 霍斯特曼. Java 核心技术 卷I 基础知识[M]. 11 版. 林琪, 苏钰涵, 译. 北京: 机械工业出版社, 2019.
+[9] 李胜, 段元梅. 基于Vue的校园活动社交平台设计[J]. 无线互联科技, 2022(1): 44-45.
 
-[10] 刘增杰, 张晨光. MySQL 5.7 从零开始学[M]. 北京: 清华大学出版社, 2017.
+[10] 夏青. 基于K-means算法的学生校园活动管理分析[D]. 苏州: 苏州大学, 2013.
 
-[11] Fielding R T. Architectural Styles and the Design of Network-based Software Architectures[D]. Irvine: University of California, 2000.
+[11] 任新钢, 罗伟. 以网络为平台加强研究生德育工作[J]. 北京教育(高教版), 2006(6): 23-25.
 
-[12] Jones M, Bradley J, Sakimura N. JSON Web Token (JWT)[S]. RFC 7519, 2015.
+[12] 周超. 缺失与重构：新形势下高校大型活动应急管理工作的思考[J]. 黑龙江高教研究, 2020, 38(7): 66-69.
 
-[13] Kleppmann M. Designing Data-Intensive Applications[M]. Sebastopol: O'Reilly Media, 2017.
+[13] WALLS C. Spring in action[M]. 6th ed. Shelter Island: Manning Publications, 2022.
 
-[14] 周志明. 深入理解 Java 虚拟机[M]. 3 版. 北京: 机械工业出版社, 2019.
+[14] JONES M, BRADLEY J, SAKIMURA N. JSON Web Token (JWT): RFC 7519[S]. IETF, 2015.
 
-[15] 陈恒, 王珊. Java EE 框架技术教程[M]. 北京: 清华大学出版社, 2020.
+[15] KLEPPMANN M. Designing data-intensive applications[M]. Sebastopol: O'Reilly Media, 2017.
 
 # 致谢
 
