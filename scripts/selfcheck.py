@@ -72,7 +72,9 @@ def shingles(text, k=13):
 def main():
     raw = load()
     body = strip_noise(raw)
-    paras = [p.strip() for p in body.split("\n\n") if p.strip()]
+    body_for_paras = re.sub(r"```.*?```", "", raw, flags=re.S)
+    paras = [p.strip() for p in re.split(r"\n\s*\n", body_for_paras)
+             if p.strip() and not p.strip().startswith("|")]
     sents = sentences(body)
     n_chars = len(norm(body))
 
@@ -88,7 +90,7 @@ def main():
     dup_sh = sum(v - 1 for v in cnt.values() if v > 1)
     dup_rate = dup_sh / len(sh) if sh else 0
 
-    dup = [s for s, c in Counter(sents).items() if c > 1]
+    dup = [s for s, c in Counter(sents).items() if c > 1 and len(norm(s)) >= 12]
 
     heads = [norm(p)[:40] for p in paras if len(norm(p)) >= 40]
     head_dup = sum(v - 1 for v in Counter(heads).values() if v > 1)
