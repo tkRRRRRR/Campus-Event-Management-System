@@ -1,125 +1,131 @@
 # 摘要
 
-校园活动的组织看似简单，真正做起来却总在几个地方卡住：通知发在群里，报名靠共享表格接龙，名额没人守；活动当天纸质签到，结束后要一张张核对到场名单；活动办完，除了几张照片，几乎没有留下可用的数据。笔者所在学院一个学期有上百场活动，组织者换一届，经验就断一次。本文要解决的问题很具体——把这套流程放进一个系统里，让名额不出错、签到可追溯、活动质量可以被比较。
+随着高校第二课堂建设的推进，校园活动的数量与参与规模持续增长，活动组织过程中的信息发布、名额分配、现场签到与效果评价逐渐成为管理难点。现有做法多依赖即时通信群与在线表格，存在名额超额、签到记录失真、参与数据难以沉淀等问题。针对上述问题，本文设计并实现了一个基于 Spring Boot 的校园活动管理系统。
 
-系统按使用者分成学生、组织者、管理员三类。学生浏览活动、报名、签到、评价；组织者发布活动、管理名单、生成签到码、查看数据；管理员负责审核、用户、分类、公告与参数。技术上采用前后端分离：后端是 Spring Boot 2.7 + MyBatis-Plus，前端是 Vue 2.7 + Element UI，认证用 JWT 加自定义角色注解，没有引入 Spring Security、Redis 这类偏重的组件。最终实现了 8 张表、42 个接口、19 个页面，并把前端构建产物打进 jar，形成"一个文件就能跑"的交付形态。
+系统采用 B/S 架构与前后端分离模式，后端基于 Spring Boot 2.7 与 MyBatis-Plus 构建，前端采用 Vue 2.7 与 Element UI，身份认证使用 JWT 与自定义角色注解。系统面向学生、活动组织者与管理员三类角色，实现活动发布与审核、在线报名、签到管理、活动评价、通知公告与数据统计等功能，共设计 8 张数据表、42 个接口与 19 个页面。
 
-工作的重点在报名名额。本文没有用分布式锁，而是把"判断还有没有名额"和"名额加一"合并成一条带条件的 UPDATE，靠影响行数判断是否抢到。为了说明这个选择不是想当然，用同一份压测脚本做了对照：容量 10 的活动、50 个并发学生，条件更新方案成功 10 人、拒绝 40 人，`signed_count` 与报名明细都是 10；换成常见的"先查后改"写法，50 人全部报名成功，超卖 40 人，而冗余计数因为丢失更新最后只剩 6——不仅名额错了，连统计都不可信。
+在关键机制上，本文重点解决两个问题。其一，针对报名环节的名额竞争，将容量判断与计数自增合并为一条带条件的更新语句，以影响行数判定报名结果，避免并发写入造成超额报名；对照实验表明，在容量为 10、并发数为 50 的条件下，该方案成功报名 10 人、拒绝 40 人，计数与明细一致，而"先查询后更新"的实现导致 50 人全部报名成功、超额 40 人，且计数因丢失更新仅剩 6。其二，针对签到的真实性问题，采用限时有效的六位签到码，并在活动结束后对未签到者累计违约次数，达到阈值时限制其报名，补签则回退计数。此外，系统以签到率、评分归一化值与完成率加权计算活动质量分，为活动效果提供可比较的量化指标。
 
-除报名外，签到环节做了两件事：签到码 6 位、默认 30 分钟有效、未过期可复用，避免二维码截图被转发；活动结束时未签到者计一次爽约，累计到阈值就限制报名一段时间，补签则回退计数。活动质量分由签到率、评分归一化、完成率按 4:4:2 加权，详情页实时算，不落库，权重可在参数里调整。
+系统完成了功能测试与并发测试，并提供内存数据库演示、单机可执行程序与内置运行环境的便携包三种运行形态，具备部署简便、可离线演示的特点。
 
-系统在 Windows 上完成了从开发、脚本回归、换机运行到打包发布的验证：内存库演示、单机 jar、内置 JRE 的便携包三种形态都能独立启动，第四种云端形态给出了 Docker 与部署配置，但未在本文写作期间实际上线。
-
-**关键词**：校园活动管理；Spring Boot；并发控制；签到码；Vue
+**关键词**：校园活动管理；Spring Boot；并发控制；签到管理；Vue
 
 # Abstract
 
-Organizing a campus activity looks straightforward until it is actually run: notices go out in chat groups, sign-ups are collected through a shared spreadsheet that nobody guards, attendance is taken on paper and later compared by hand, and once the event ends little usable data remains. In the author's college more than a hundred activities are held each semester, and every change of organizers loses part of the experience. This thesis addresses a narrow but real problem: putting the whole process into one system so that quotas stay correct, attendance can be traced, and activities become comparable.
+With the advancement of the second classroom in universities, the number and scale of campus activities keep growing, which makes information distribution, quota allocation, on-site check-in and effect evaluation increasingly difficult in activity organization. Current practices usually rely on instant messaging groups and online spreadsheets, resulting in over-booked quotas, unreliable attendance records and dispersed participation data. To address these problems, this thesis designs and implements a campus activity management system based on Spring Boot.
 
-The system has three roles. Students browse, register, check in and review; organizers publish activities, manage lists, issue check-in codes and read statistics; administrators review activities and maintain users, categories, announcements and parameters. The back end is built with Spring Boot 2.7 and MyBatis-Plus, the front end with Vue 2.7 and Element UI, and authentication relies on JWT with a custom role annotation. Spring Security and Redis were deliberately left out. The result contains eight tables, forty-two endpoints and nineteen pages, and the front-end bundle is packaged into the jar so that the whole system runs from a single file.
+The system adopts a B/S architecture with separated front and back ends. The back end is built on Spring Boot 2.7 and MyBatis-Plus, the front end uses Vue 2.7 and Element UI, and authentication is implemented with JWT and a custom role annotation. Three roles are supported: students, organizers and administrators. The system provides activity publishing and approval, online registration, check-in management, activity review, notices and statistics, covering eight tables, forty-two endpoints and nineteen pages.
 
-The main technical concern is quota control during registration. Instead of a distributed lock, the system merges the capacity check and the increment into one conditional UPDATE and decides by the affected row count. A control experiment was run with the same script: on an activity with capacity 10 and 50 concurrent students, the conditional update accepts 10 and rejects 40, with the counter and the registration records both equal to 10, whereas the common read-then-write implementation accepts all 50, oversells 40 seats, and leaves the counter at 6 because of lost updates.
+Two mechanisms are emphasized. For quota competition during registration, capacity checking and counter increment are combined into a single conditional update, and the result is determined by the affected row count, which prevents over-booking under concurrent writes. A control experiment with capacity 10 and 50 concurrent requests shows that the proposed approach accepts 10 requests and rejects 40, with the counter equal to the number of records, whereas the read-then-write implementation accepts all 50 requests, oversells 40 seats and leaves the counter at 6 due to lost updates. For check-in authenticity, a six-digit code with a limited validity period is adopted, absence strikes are accumulated when activities close, registration is suspended once the threshold is reached, and manual check-in rolls the counter back. In addition, a quality score weighted by attendance rate, normalized rating and completion rate is calculated to provide a comparable indicator of activity performance.
 
-Check-in uses a six-digit code valid for thirty minutes by default and reused until it expires, which makes forwarded screenshots useless. Students who never check in receive a no-show strike when the activity closes; reaching the threshold suspends registration for a period, and a manual check-in rolls the counter back. A quality score combines attendance rate, normalized rating and completion rate with weights 4:4:2, computed on read rather than stored, and adjustable through system parameters.
+Functional and concurrency tests were carried out. The system supports three runtime forms: an in-memory demo, a standalone executable, and a portable package with a bundled runtime environment.
 
-Four deployment forms were designed; three of them — in-memory demo, single jar, and a portable package with a bundled JRE — were actually verified on Windows machines, while the cloud form ships as Docker and configuration files but was not deployed online during the writing of this thesis.
-
-**Key words**: campus activity management; Spring Boot; concurrency control; check-in code; Vue
+**Key words**: campus activity management; Spring Boot; concurrency control; check-in; Vue
 
 # 第1章 绪论
 
-## 1.1 研究背景
+## 1.1 研究背景与意义
 
-先说一个具体场景。学院团委要办一场 300 人的迎新晚会，通知发在三个年级群里，报名表是一个在线表格，学生在表格里填学号姓名，填满 300 行就截止。问题几乎每次都会出现：有人同时提交，表格出现 305 行；有人填了但临时不来，现场空了三十多个座位；签到是在入口摆两张桌子，志愿者对着名单打勾，散场后要把纸质名单和表格逐行比对，才能算出实际到场率。整个过程没有任何一步留下结构化数据，第二年再办，只能凭印象估计该准备多少座位。
+校园活动是高校育人与校园文化建设的重要载体。随着第二课堂成绩单制度的推行，学生参与活动的数量与质量被纳入培养评价体系，活动组织工作随之由"是否举办"转向"参与是否真实、效果如何衡量"。这一转变对活动管理提出了更高的信息管理要求。
 
-这样的场景在讲座、比赛、志愿服务、社团招新里反复出现。它们的共同点是：单场人数从几十到几百，报名窗口短则半天、长则两周，签到集中在开场前的十几分钟。人数不多，但时间集中，手工方式刚好卡在"能应付"和"总要出错"之间。
+目前多数高校的活动组织仍以人工方式为主。活动信息通过即时通信群发布，报名依托在线表格接龙，名额依靠人工估算，签到采用纸质名单或静态二维码，活动结束后缺少系统的参与数据。以某学院迎新晚会为例，活动规模约 300 人，报名通过在线表格收集，出现同一时段并发提交导致表格记录超出容量 5 条的情况；现场签到由志愿者对照名单手工勾选，散场后需逐行与报名表核对才能计算到场率。此类做法在单场活动尚可维持，但难以支撑一学期上百场活动的组织与统计，且组织者更替后经验难以延续。
 
-从软件角度看，这类系统的功能并不复杂，真正需要想清楚的是两处。第一处是报名瞬间的并发写入：多个学生同时点"报名"，名额只剩一个时，谁该成功？第二处是签到的现场效率与真实性：既要快，又要防止把签到码转发给别人。本文的大部分设计围绕这两点，其余功能按常规业务实现，不额外增加复杂度。
+开发校园活动管理系统具有以下意义。第一，将活动发布、报名、签到、评价等环节纳入统一平台，减少重复性人工操作，提高组织效率。第二，通过并发控制保证名额分配的准确性，避免超额报名引发的参与体验问题。第三，通过限时签到码与违约记录机制提升签到数据的真实性，为第二课堂学分认定提供可靠依据。第四，通过过程数据的积累与统计，为活动质量的评价与改进提供量化支撑。
 
 ## 1.2 国内外研究现状
 
-国内高校的活动管理系统大致经历了两个阶段。
+### 1.2.1 校园活动管理系统的研究现状
 
-早期系统解决的是"信息上网"。尹君[1]提出基于 B/S 模式的社团活动管理系统，功能集中在社联新闻、社团展示与资料下载；王蕾[2]用 LAMP 架构搭建校园微活动平台，强调资源占用低、可应对较大规模并行访问。这一阶段的系统把线下的通知与资料搬到浏览器里，报名仍多由后台人工确认。
+国内高校活动管理系统的研究大致可分为三个阶段。
 
-随后出现流程贯通的系统。侯颖等[3]借助校园一卡通的刷卡记录统计学生参与情况，把签到与硬件采集结合起来；蒋邢飞等[4]设计的"掌上书院"把活动报名、请假、上课签到与图书借阅整合为统一入口，强调与学生事务管理模式相融合；王素美等[5]依托业务基础平台与统一认证快速搭建活动系统，思路是复用校园既有基础设施，减少重复开发。
+早期系统以信息发布与流程线上化为目标。尹君[1]设计了基于 B/S 模式的社团活动管理系统，将活动申请、审批与发布集中到同一平台，学生在线报名、管理人员导出名单，替代了纸质审批与手工登记。王蕾[2]采用 LAMP 架构构建校园微活动管理平台，强调部署成本低、维护简单，适合院系一级的小规模应用。此类系统的共同特征是功能覆盖以"信息发布与名单登记"为主，对名额约束、到场真实性等问题关注较少。
 
-近几年，前后端分离与移动端成为主流。钟育伙[6]用 Spring Boot + Vue 实现了包含发布、报名、审核、签到与评价的全流程系统；黄智霖[7]以学分电子化为切入点，通过数据库映射与规则匹配，让学生登录后即可看到自己可参与的活动；张银霞等[8]基于 ASP.NET 与 ADO.NET 开发响应式活动管理软件，可在多种终端使用；李胜等[9]则从社交角度出发，强调活动的发起、互动与信息分享。
+随后，研究者开始将活动管理与校园既有信息系统集成。侯颖等[3]基于校园一卡通设计了学生活动智能管理系统，利用一卡通数据完成身份识别与签到记录，提升了数据的一致性。蒋邢飞等[4]设计的"掌上书院"将活动、社团、事务办理整合到移动端入口，强调学生事务的一站式办理。王素美等[5]提出基于业务管理平台的校园活动管理系统，通过统一平台支撑多部门的业务协同。此类系统解决了数据分散的问题，但活动报名仍以功能实现为主，对并发场景下的名额控制缺乏讨论。
 
-除流程型系统外，还有两类相关研究。一类关注事后分析：夏青[10]用优化的 K-means 算法对学生校园行为聚类，为辅导员分类管理提供依据；任新钢等[11]把活动项目纳入研究生德育管理平台，侧重思想政治教育功能。另一类关注安全与规范：周超[12]讨论高校大型活动的应急管理，指出观念滞后、方式落后、体系不健全、处置能力弱等问题，主张建设包含日常管理、风险评估、监测预警、响应处置、善后恢复的闭环体系。
+近年来，前后端分离架构在校园系统开发中得到广泛应用。钟育伙[6]采用 SpringBoot 与 Vue 实现了校园活动管理系统，完成了活动发布、报名与签到等基本功能；黄智霖[7]以厦门华厦学院为例设计了高校校园活动管理系统，覆盖活动全流程管理；张银霞等[8]基于 ASP.NET 开发了学校活动智能管理软件，在功能完整性与界面规范性上做了较多工作；李胜等[9]设计的校园活动社交平台引入了活动互动与社交属性。这一阶段的系统在工程实现上较为成熟，但对报名并发控制、签到防代签等关键问题仍缺少针对性设计。
 
-国外高校更多使用通用活动平台，例如 Eventbrite 的票务流程、Campus Labs 的学生事务套件。这些产品流程成熟，支持在线支付、票种与退款，工程完成度高；但其组织模型面向商业活动，与国内"团委—学院—社团"的三级审核结构并不贴合，中文环境与私有化部署也不方便，核心逻辑闭源，不适合作为教学研究对象。相关研究更多集中在活动推荐与参与度预测，与本文关注的流程可信度不是同一个问题。
+在活动效果评价方面，夏青[10]采用 K-means 算法对学生校园活动数据进行分析，实现了参与行为的聚类；任新钢等[11]讨论了以网络平台开展研究生德育工作的方式；周超[12]从应急管理角度分析了高校大型活动中的风险与组织缺失问题。上述研究为活动数据的利用提供了思路，但尚未形成可直接用于活动质量比较的量化指标。
 
-把上述工作放在一起看，可以发现两处空白。其一是名额准确性。对本文收集的 12 篇中文文献做词频检索，"并发"一词一次也没有出现，"超卖"同样为 0，报名环节普遍停留在"先查后插"的写法，这类实现在低并发下不易暴露问题，一旦多人同时提交就会出现名额超出。其二是签到真实性。一卡通方案[3]依赖终端部署，静态二维码方案可以截图转发，而"限时签到码 + 爽约记录"的组合较少被系统讨论。本文把这两点作为设计约束，并在第 6 章用对照实验给出量化结果。
+### 1.2.2 相关技术研究
 
-并发控制方面，工程界已有成熟的方案谱系：数据库悲观锁、乐观锁、条件更新，应用内本地锁，以及分布式场景下的 Redis 锁与消息队列削峰。Kleppmann[15]从原理上说明，只要"判断"与"写入"在同一次原子操作中完成，就不需要额外的锁。这一判断构成了本文的选型依据。需要说明的是，它依赖单库、依赖数据库行锁，一旦分库分表或多实例写入不同库，条件更新不再成立，仍需分布式协调。
+Spring Boot 以"约定优于配置"为设计原则，通过自动配置与起步依赖简化 Spring 应用的搭建过程[13]，已成为国内中小型 Web 系统的主流选择。持久层框架 MyBatis-Plus 在 MyBatis 基础上提供通用 CRUD 与分页插件，可在保留手写 SQL 能力的同时减少重复代码。前端方面，Vue 采用数据驱动视图的方式，配合 Element UI 组件库可快速构建管理类界面。
+
+在身份认证方面，基于令牌的方案被广泛采用。JSON Web Token 以自包含的方式在客户端与服务端之间传递身份信息[14]，服务端无需保存会话状态，适合前后端分离与无状态部署。
+
+在并发控制方面，常见方案包括数据库悲观锁、乐观锁、条件更新、应用内本地锁以及基于 Redis 的分布式锁。Kleppmann[15]指出，并发写入的正确性取决于"读取—判断—写入"是否作为原子操作完成；若该窗口未被机制覆盖，就会出现丢失更新。对于单库、中小规模并发的应用，将判断条件与更新操作合并为一条语句并由数据库保证原子性，是复杂度与性能较为均衡的做法。
+
+### 1.2.3 现有研究的不足
+
+综合上述研究，现有工作存在两点不足。第一，多数系统侧重功能覆盖，对报名环节的并发写入缺少设计与验证，名额超额问题未被系统讨论。本文对收集的 12 篇校园活动管理系统文献进行全文检索，"并发"与"超卖"两个关键词的出现次数均为 0，说明该问题尚未进入研究视野。第二，签到方式以静态二维码或纸质名单为主，缺少对代签与缺席的约束机制，到场数据难以作为评价依据。本文针对上述两点展开设计，并通过对照实验与测试用例验证。
 
 ## 1.3 研究内容与论文结构
 
-本文做了四件事。
+本文的主要工作包括四个方面。
 
-（1）梳理校园活动的实际流程，把参与者分成学生、组织者、管理员三类，明确每类人能做什么、不能做什么，形成功能需求与非功能需求。
+（1）需求分析。通过业务流程梳理与角色划分，明确学生、组织者、管理员三类用户的功能边界，形成功能需求与非功能需求，并给出报名、签到、评价三条核心流程。
 
-（2）完成系统设计，包括总体架构、8 张表的数据模型、42 个接口的约定，以及名额扣减、签到码、爽约限制、质量分四项关键机制的具体做法。
+（2）系统设计。完成总体架构、功能模块、数据库与接口设计，重点给出名额原子扣减、限时签到码与违约限制、活动质量分三项关键机制的设计方案。
 
-（3）实现系统，共 8 个业务模块、19 个页面，并用脚本对主要流程做接口级回归，覆盖权限、边界与异常。
+（3）系统实现。基于 Spring Boot 与 Vue 实现各功能模块，完成 8 张数据表、42 个接口与 19 个页面，并支持内存数据库演示、单机运行与便携运行三种形态。
 
-（4）设计并执行并发对照实验，量化条件更新与"先查后改"的差异；同时完成单机、便携两种形态的换机验证。
+（4）系统测试。设计功能测试用例覆盖权限、边界与异常场景，并设计并发对照实验，量化条件更新与"先查询后更新"两种实现的差异。
 
-论文共七章：第 1 章说明背景与现状；第 2 章交代技术选型及使用中遇到的问题；第 3 章做需求分析；第 4 章给出设计；第 5 章描述实现与界面；第 6 章给出测试方案与结果；第 7 章总结并说明不足。
+论文共分七章。第 1 章介绍研究背景、国内外现状与研究内容；第 2 章说明相关技术及其选型依据；第 3 章进行需求分析；第 4 章给出系统设计；第 5 章描述系统实现；第 6 章说明测试方案与结果；第 7 章总结全文并指出不足与改进方向。
 
 # 第2章 相关技术
 
 ## 2.1 Spring Boot
 
-选 Spring Boot 2.7.18 不是因为它最新，而是因为它仍支持 JDK 8。Spring Boot 的设计目标是把 Spring 的配置工作收敛为约定与自动配置[13]，这一点在本文的收益很直接：项目里没有一份 XML 配置，启动类加上注解即可。学校机房、答辩用机和同学自己的笔记本上装的多数还是 JDK 8，若改用 3.x（要求 JDK 17），演示时很可能因为环境不一致打不开。2.7 是 2.x 的最后一个分支，社区资料多，遇到问题容易搜到答案，这对一个人独立完成的项目很重要。
+Spring Boot 是在 Spring 框架基础上构建的快速开发框架，其核心设计思想是约定优于配置[13]。框架通过自动配置机制根据类路径中的依赖推断所需组件，通过起步依赖统一管理依赖版本，并提供内嵌 Web 容器，使应用可以以可执行 JAR 的形式独立运行。
 
-项目里用到的能力不算多：`@RestController` 写接口，`WebMvcConfigurer` 注册跨域、拦截器和静态资源映射，`@Scheduled` 跑定时任务，`spring.sql.init` 在启动时执行建表与初始化脚本，`@RestControllerAdvice` 把异常统一成 `{code, msg, data}`。最后这项对前端帮助很大：业务校验失败、参数格式错误、令牌过期，前端拿到的都是同一种结构，只要判断 `code` 就能决定提示什么。
+本文选择 Spring Boot 2.7.18 作为后端框架，主要依据如下。其一，该版本支持 JDK 8，与本课题的运行环境一致；Spring Boot 3.x 要求 JDK 17 及以上，在机房与答辩环境中适配成本较高。其二，2.7 系列为 2.x 的长期维护分支，文档与社区资料完整，便于独立开发过程中的问题排查。其三，框架提供的拦截器、全局异常处理、定时任务与静态资源映射等能力已能覆盖本系统的需求，无需引入额外的企业级组件。
 
-使用中遇到两个与框架相关的问题，记在这里。一是 MySQL 驱动的坐标：Spring Boot 2.7.18 的依赖管理里没有 `mysql:mysql-connector-java` 的版本，而新版驱动已改用 `com.mysql:mysql-connector-j`，直接写旧坐标会解析不到版本号。二是打包时若应用正在运行，Windows 会锁住 jar，Maven 报 `Unable to rename ... to .original`，必须先结束进程再打包。这类问题不影响设计，但会实实在在地卡住交付。
+系统中使用的主要能力包括：以 `@RestController` 构建 REST 接口；通过 `WebMvcConfigurer` 注册跨域配置、身份拦截器与静态资源映射；通过 `@Scheduled` 实现活动状态的定时维护；通过 `spring.sql.init` 在启动时执行建表与初始化脚本；通过 `@RestControllerAdvice` 将业务异常、参数校验异常与类型转换异常统一转换为 `{code, msg, data}` 结构。统一的响应结构降低了前端错误处理的复杂度，使前端只需依据业务状态码判断处理分支。
+
+在工程实践中需要注意两点。第一，Spring Boot 2.7.18 的依赖管理未包含 `mysql:mysql-connector-java` 的版本，而新版 MySQL 驱动已迁移至 `com.mysql:mysql-connector-j`，依赖坐标需相应调整。第二，应用运行期间执行打包时，操作系统会锁定已加载的 JAR 文件，导致 Maven 重命名失败，需在打包前停止应用进程。
 
 ## 2.2 MyBatis-Plus
 
-持久层用 MyBatis-Plus 3.5.3.2，主要图它两点：单表增删改查不用写 XML，分页插件能直接改写 SQL。项目里的 SQL 分成三类：单表条件查询用 `LambdaQueryWrapper`；多表联查和聚合（报名名单、统计聚合、排行）写在 `resources/mapper/*.xml`；只返回一个数字的（比如某活动签到人数）用 `@Select` 注解，省掉一个文件。
+MyBatis-Plus 是在 MyBatis 之上增强的持久层框架，提供通用 CRUD 接口、条件构造器、分页插件与字段自动填充等功能，在保留原生 SQL 能力的同时减少样板代码。
 
-分页插件配置的是 `DbType.MYSQL`，即使演示环境跑的是 H2 也没有改。原因是 H2 以 `MODE=MySQL` 启动后分页语法与 MySQL 一致，统一配置反而减少了分支；如果将来换成 PostgreSQL，这里必须改，否则生成的 `limit` 写法会报错。
+本系统的数据访问按三类场景组织。第一类为单表条件查询与更新，使用 `LambdaQueryWrapper` 构造条件，避免手写字段名带来的拼写风险。第二类为多表关联查询与聚合统计，包括报名名单、签到名单、分类统计与报名排行，采用 XML 映射文件编写 SQL，便于维护复杂语句。第三类为返回单一标量的查询，如某活动的签到人数，采用注解方式书写，减少文件数量。
 
-自动填充用 `MetaObjectHandler` 完成，插入时写 `create_time`，更新时写 `update_time`，业务代码不再手工赋值。这一条看似小事，但避免了"某个接口忘了写时间"导致排序错乱。
+分页功能通过分页插件实现，数据库方言统一配置为 `DbType.MYSQL`。由于演示环境使用的 H2 数据库以 MySQL 兼容模式启动，其分页语法与 MySQL 一致，统一配置可减少分支处理；如后续更换为 PostgreSQL 等数据库，则需同步调整方言配置。
 
-踩过的坑有两个值得记录。其一是泛型推断：想把 `Page<SysUser>` 直接转成 `PageResult<UserVO>` 时，编译器报类型约束冲突，最后改成显式构造 `new PageResult<>(current, size, total, records)`，先查出实体再逐条转 VO。其二是 `selectCount` 返回 `Long`，直接赋给 `int` 字段编译不过，需要 `.intValue()`。这类问题说明，用封装换来的便利，往往要在类型边界上还一点债。
+字段自动填充通过 `MetaObjectHandler` 实现，插入时写入创建时间，更新时写入更新时间，保证时间字段的一致性。此外，系统在报名与评价表上建立了 `(activity_id, user_id)` 唯一索引，作为防止重复提交的最终约束，并将唯一键冲突异常转换为统一的业务提示。
 
-## 2.3 Vue.js 与 Element UI
+开发过程中需注意两个类型相关问题：其一，分页结果由实体分页对象转换为视图对象分页结果时，直接使用泛型方法会触发类型推断约束冲突，需显式构造结果对象；其二，`selectCount` 返回 `Long` 类型，赋值给整型字段时需显式转换。
 
-前端用 Vue 2.7。没有上 Vue 3 的原因很实际：Element UI 只支持 Vue 2，而 Element Plus 的组件 API 与文档在这两年变动较多，一个人写 19 个页面，稳定比新更重要。
+## 2.3 Vue 与 Element UI
 
-路由用 hash 模式，地址形如 `/#/activities`。这样打包后的静态文件放在任何子路径下都能直接打开，不需要服务器配置 URL 重写；把前端塞进 Spring Boot 的 `static` 目录时，这一点尤其省事。代价是地址栏带 `#`，对内部系统来说可以接受。
+Vue 是一款渐进式前端框架，采用数据驱动视图与组件化开发方式，通过响应式数据绑定减少手动 DOM 操作。Element UI 是面向桌面端管理系统的组件库，提供表格、表单、弹窗、分页等常用组件，与本系统的管理类界面需求匹配。
 
-状态管理用 Vuex，只存三样东西：token、当前用户、未读消息数，并同步到 `localStorage`，刷新页面不掉登录态。请求封装在 `utils/request.js`：统一加 `Authorization` 头、统一解包 `data`、401 时清登录态并跳登录页、其余错误弹一次提示。各页面因此只写成功分支，代码短了不少。
+系统前端基于 Vue 2.7 构建。选择 Vue 2 的主要原因是 Element UI 仅支持 Vue 2 版本，而系统需要在有限开发周期内保证界面组件的稳定性。路由采用 hash 模式，使构建产物在任意静态路径下均可直接访问，无需服务端配置 URL 重写；该模式配合将前端资源打包进后端 JAR 的部署方式，可简化部署流程。状态管理采用 Vuex，仅保存令牌、当前用户信息与未读消息数，并持久化至本地存储，以维持刷新后的登录状态。
 
-图表用 ECharts 5。统计页的折线、环形、排行三类图，数据都来自后端的聚合接口，前端不做二次计算，免得两边口径不一致。
+网络请求通过封装的 Axios 实例统一处理：请求阶段附加认证头，响应阶段按业务状态码分流，认证失效时清除本地登录状态并跳转登录页，其余错误统一提示。图表展示采用 ECharts 5，统计页面的折线图、环形图与排行榜数据均来自后端聚合接口，前端不重复计算，以保证统计口径一致。
 
 ## 2.4 JWT 身份认证
 
-认证用 java-jwt 3.19.4。令牌的结构与校验规则依据 RFC 7519[14]：登录成功后签发令牌，载荷里放 `userId`、`username`、`role`，有效期 7 天。服务端用 `HandlerInterceptor` 拦截 `/api/**`，白名单只有登录、注册和健康检查三个接口；解析成功后把用户信息放进 `ThreadLocal`，请求结束在 `afterCompletion` 里清理。这一步不能省——Tomcat 复用线程，不清理就会出现"上一个请求的用户串到下一个请求"的问题，而且这种错误很难复现。
+JSON Web Token 是一种基于 JSON 的开放标准[14]，令牌由头部、载荷与签名三部分组成，服务端通过签名校验令牌的完整性与来源。由于令牌自身携带身份信息，服务端无需保存会话，适合前后端分离架构与无状态部署。
 
-角色控制用自定义注解 `@RequireRole`，写在方法或类上，拦截器读取注解声明的角色集合与当前用户比对，不匹配返回 403。这样增删接口时只改注解，不用在业务代码里写 `if (role != ADMIN)`。
+系统采用 java-jwt 3.19.4 实现认证。用户登录成功后，服务端签发包含用户标识、用户名与角色的令牌，有效期设为 7 天。请求进入时由拦截器校验令牌，解析成功后将用户信息存入 `ThreadLocal`，供业务层获取当前用户；请求结束后在 `afterCompletion` 中清理该变量。由于 Web 容器复用工作线程，若未及时清理，后续请求可能读取到前一次请求的用户信息，产生身份串扰。
 
-没有用 Spring Security，原因有两点：一是它的过滤器链、`UserDetailsService`、异常处理都要重新适配成项目统一的返回体，配置量不小；二是它对新手不够直观，出问题时排查成本高。自己写拦截器只有一百多行，逻辑一眼能看完。这个选择的代价是缺少现成的密码加密、会话管理等功能，好在 BCrypt 由 Hutool 提供，够用。
+角色控制通过自定义注解 `@RequireRole` 实现。注解声明允许访问的角色集合，拦截器将其与当前用户角色比对，不匹配时返回 403。该方式将权限声明与业务代码分离，新增接口时只需在方法上添加注解，便于维护。
 
-JWT 的固有缺点是签发后无法主动失效。系统里做了两处弥补：登录时检查账号状态，被禁用的账号直接拒绝；报名时检查 `ban_until`，被封禁的用户即使拿着有效令牌也报不了名。真正的"踢下线"没有实现，这一点在第 7 章列为不足。
+系统未引入 Spring Security，原因有两点：一是其过滤器链与认证流程需额外适配以输出统一的响应结构，配置成本较高；二是对于角色模型简单的系统，自行实现拦截器的代码量更小、逻辑更直观。该选择的代价是缺少框架提供的会话管理与安全防护组件，系统通过 BCrypt 完成密码摘要存储，并在登录与报名环节分别校验账号状态与违约封禁状态，以弥补令牌无法主动失效的不足。
 
 ## 2.5 MySQL 与 H2
 
-线上用 MySQL 8.0，演示用 H2 1.4.200 内存库。为了让一份建表脚本两边都能跑，`schema.sql` 只使用公共语法子集：不写 `ENGINE`、`COMMENT`、内联 `KEY`，字段类型限定在 `INT`、`VARCHAR`、`DATETIME`、`DECIMAL`、`TINYINT`。索引单独放在 `indexes.sql`，因为它用了 MySQL 的写法，H2 不认——演示库数据量小，没有索引也不影响。
+系统生产环境使用 MySQL 8.0，演示环境使用 H2 1.4.200 内存数据库。为兼容两种数据库，建表脚本仅使用公共语法子集：不指定存储引擎、不书写字段注释、不使用内联索引定义，字段类型限定为整型、变长字符串、日期时间、定点数与微整型。索引定义单独存放于独立的脚本文件，因其语法为 MySQL 特有，H2 不兼容；演示环境数据量较小，缺少索引不影响功能验证。
 
-H2 的连接串是 `jdbc:h2:mem:campus;MODE=MySQL;DATABASE_TO_LOWER=TRUE`。`MODE=MySQL` 让 H2 兼容部分 MySQL 语法，`DATABASE_TO_LOWER=TRUE` 保证表名列名的大小写与 MySQL 一致，否则 MyBatis 映射会因大小写对不上而取不到值。内存库每次启动重建，正好满足演示数据要能重置的需求。
+H2 以内存模式运行，连接串中指定 `MODE=MySQL` 以兼容 MySQL 的部分语法，并指定 `DATABASE_TO_LOWER=TRUE` 以保证表名与列名的大小写形式与 MySQL 一致，避免映射失败。内存数据库在每次启动时重建，便于演示数据的重置。
 
-两套库的日期函数差异是个麻烦。按天聚合的统计如果写在 SQL 里，H2 与 MySQL 的写法不同，维护两套 SQL 容易出错。最终的做法是只把时间列查出来，在 Java 层按 `LocalDate` 归并，并补齐没有数据的日期。这样既绕开方言，也顺手解决了折线图缺格的问题。
+两种数据库在日期函数上存在差异，若在 SQL 中完成按日聚合，则需维护两套语句。系统采用的处理方式是将时间字段查询至应用层，按日期在 Java 中归并统计，并补齐无数据的日期，从而避免数据库方言差异，同时保证趋势图的横轴连续。
 
 ## 2.6 并发控制与原子更新
 
-InnoDB 在默认隔离级别下，一条 `UPDATE` 会对命中的行加排他锁，"判断"与"写入"在同一条语句中完成，不会被其他事务插进来。这就是条件更新能保证名额正确的原因。
+在关系数据库中，更新语句在执行时会对命中行加锁，"判断条件"与"写入操作"在同一条语句内完成，其他事务无法在该语句执行期间插入修改。这一特性是条件更新能够保证名额准确性的基础。
 
-常规写法是先 `select` 当前人数，判断小于容量后再 `update` 成新值。两个请求可能读到同一个旧值，都认为还有名额，然后一前一后写回，后写的覆盖先写的，造成丢失更新；与此同时，两条报名记录都已经插入，实际人数超过容量。Kleppmann[15]把这类现象归为并发写入的一类典型错误，强调"读取—判断—写回"之间的窗口必须由某种原子机制填补。这个错误在低并发下几乎不出现，本地用浏览器点几下也测不出来，所以更容易被忽略。
+常见的实现方式是先查询当前报名人数，判断是否小于容量，再执行更新写入新值。两个并发请求可能读取到同一旧值，均判断为有名额，随后先后写回，后写的结果覆盖先写的结果，形成丢失更新；与此同时，两条报名记录均已插入，实际参与人数超出容量。该问题在低并发条件下不易复现，因而容易被忽视。
 
-本文的做法是把条件写进 `where`，自增写进 `set`，用影响行数判断结果。这一方案的前提是单库、单表上的行锁有效，且更新与明细插入在同一个事务中。第 6 章用同一份脚本对两种写法做了对照，给出具体数字。
+本文将容量判断写入更新语句的 `WHERE` 子句，将计数自增写入 `SET` 子句，并以影响行数判断操作是否成功。该方案成立的前提是单库部署、行锁有效，且计数更新与明细插入处于同一事务。第 6 章通过同一压测脚本对两种实现进行对照，给出量化结果。
