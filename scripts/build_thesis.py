@@ -37,13 +37,16 @@ def set_font(run, name=SONG, size=12, bold=False, color=None):
 
 
 def add_rich(par, text, name=SONG, size=12, bold=False):
-    """Handle **bold** segments."""
-    for i, seg in enumerate(re.split(r"(\*\*[^*]+\*\*)", text)):
+    """Handle **bold** and `inline code` segments."""
+    for seg in re.split(r"(\*\*[^*]+\*\*|`[^`]+`)", text):
         if not seg:
             continue
         if seg.startswith("**") and seg.endswith("**"):
             r = par.add_run(seg[2:-2])
             set_font(r, name, size, True)
+        elif seg.startswith("`") and seg.endswith("`") and len(seg) > 1:
+            r = par.add_run(seg[1:-1])
+            set_font(r, "Consolas", size - 1.5, bold)
         else:
             r = par.add_run(seg)
             set_font(r, name, size, bold)
@@ -207,6 +210,17 @@ def add_table(doc, rows):
     table = doc.add_table(rows=len(rows), cols=cols)
     table.style = "Table Grid"
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = False
+    # 关闭"根据内容自动调整"，否则 Word 会忽略列宽设置
+    try:
+        from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn as _qn
+        _tblPr = table._tbl.tblPr
+        _layout = OxmlElement("w:tblLayout")
+        _layout.set(_qn("w:type"), "fixed")
+        _tblPr.append(_layout)
+    except Exception:
+        pass
     for ri, row in enumerate(rows):
         for ci in range(cols):
             cell = table.cell(ri, ci)
@@ -222,6 +236,28 @@ def add_table(doc, rows):
     sp = doc.add_paragraph()
     sp.paragraph_format.space_after = Pt(6)
     sp.paragraph_format.line_spacing = 1.0
+
+    # 列宽：按表头语义给定固定比例，避免自动测量在固定布局下失真
+    try:
+        header = [c.strip() for c in rows[0]]
+        preset = None
+        if any("路径" in h for h in header) and cols == 4:
+            preset = [2.2, 5.0, 2.7, 4.7]
+        elif any("预期" in h for h in header) and cols == 4:
+            preset = [1.7, 5.3, 3.9, 3.7]
+        elif cols == 5:
+            preset = [1.7, 3.0, 2.4, 3.8, 3.7]
+        elif cols == 3:
+            preset = [3.6, 5.2, 5.8]
+        elif cols == 2:
+            preset = [4.0, 10.6]
+        if preset:
+            for ci, w in enumerate(preset[:cols]):
+                table.columns[ci].width = Cm(w)
+                for ri in range(len(rows)):
+                    table.cell(ri, ci).width = Cm(w)
+    except Exception as exc:
+        print("table width warn:", exc)
 
 
 def add_figure(doc, path, caption):
@@ -368,11 +404,24 @@ def build():
             i += 1
             continue
 
+        # 纯代码路径行：小号等宽、左对齐、不缩进
+        if re.match(r"^`[^`]+`$", stripped):
+            p = doc.add_paragraph()
+            p.paragraph_format.left_indent = Cm(0.75)
+            p.paragraph_format.line_spacing = 1.5
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            r = p.add_run(stripped[1:-1])
+            set_font(r, "Consolas", 9.5)
+            i += 1
+            continue
+
         # normal paragraph
         p = doc.add_paragraph()
         p.paragraph_format.first_line_indent = Pt(24)
         p.paragraph_format.line_spacing = 1.5
-        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        # 含超长不可断片段（如长路径）时用左对齐，避免两端对齐把字距拉散
+        longest = max([len(t) for t in stripped.split()] or [0])
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT if longest > 45 else WD_ALIGN_PARAGRAPH.JUSTIFY
         add_rich(p, stripped)
         i += 1
 

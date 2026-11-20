@@ -222,7 +222,7 @@ java -cp .\scripts\out ConcurrencyTest http://127.0.0.1:8080 <activityId> 1 50
 | 文件 | 内容 |
 |---|---|
 | [doc/00-项目总体规划.md](doc/00-项目总体规划.md) | 需求、设计、进度流水、踩坑记录 |
-| [doc/02-接口文档.md](doc/02-接口文档.md) | 40+ 接口的入参与返回 |
+| [doc/02-接口文档.md](doc/02-接口文档.md) | 58 个接口的入参与返回 |
 | [doc/03-在线部署方案.md](doc/03-在线部署方案.md) | Vercel + Render + SQLPub 部署 |
 | [doc/04-测试用例.md](doc/04-测试用例.md) | 98 条功能用例与并发实验 |
 | [doc/05-查重与AIGC自检报告.md](doc/05-查重与AIGC自检报告.md) | 稿内重复率、句长分布、与收集文献的重合度 |
@@ -231,7 +231,7 @@ java -cp .\scripts\out ConcurrencyTest http://127.0.0.1:8080 <activityId> 1 50
 | [doc/08-演示脚本.md](doc/08-演示脚本.md) | 现场演示流程、检查清单与应急预案 |
 | [doc/09-交付清单.md](doc/09-交付清单.md) | 全部材料清单与提交前检查项 |
 | [doc/答辩材料.docx](doc/答辩材料.docx) | 讲稿 + 问答 + 演示脚本合并版（16 页） |
-| [doc/毕业论文初稿.docx](doc/毕业论文初稿.docx) | 论文初稿（59 页，约 2.5 万字，15 条参考文献来自 Zotero 分类） |
+| [doc/毕业论文初稿.docx](doc/毕业论文初稿.docx) | 论文初稿（59 页，约 2.5 万字，含附录 A~D；15 条参考文献来自 Zotero 分类） |
 | [doc/开题报告.docx](doc/开题报告.docx) | 开题报告（5 页） |
 | [doc/任务书.docx](doc/任务书.docx) | 毕业设计任务书（3 页） |
 | [doc/文献综述.docx](doc/文献综述.docx) | 文献综述（6 页，按 12 篇中文文献重写） |

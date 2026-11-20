@@ -1,27 +1,27 @@
 # 附录 A 核心代码
 
-附录中的代码均取自系统实际运行的源文件，未作简化或改写。
+附录中的代码均取自系统实际运行的源文件，仅去除与逻辑无关的空行。
 
 ## A.1 名额扣减的原子更新
 
-文件：`src/main/java/com/campus/activity/mapper/ActivityMapper.java`。条件与自增位于同一条语句，影响行数为 1 才表示获得名额。
+src/main/java/com/campus/activity/mapper/ActivityMapper.java
+
+该语句把条件判断与自增合并为一条 SQL，影响行数为 1 才表示获得名额。
 
 ```java
-increaseSignedCount(@Param("activityId") Integer activityId);
-
-    /**
-     * 原子归还名额：取消报名时调用。
-     */
-    @Update("update activity set signed_count = signed_count - 1 " +
-            "where id = #{activityId}
+    @Update("update activity set signed_count = signed_count + 1 " +
+            "where id = #{activityId} and signed_count < capacity and status = 2")
+    int increaseSignedCount(@Param("activityId") Integer activityId);
 ```
 
 ## A.2 报名的校验顺序与事务边界
 
-文件：`src/main/java/com/campus/activity/service/impl/RegistrationServiceImpl.java`。方法依次校验活动状态、报名截止、活动是否开始、是否被限制报名、是否重复报名，最后执行名额扣减并写入明细。
+src/main/java/com/campus/activity/service/impl/RegistrationServiceImpl.java
+
+方法依次校验活动状态、报名截止时间、活动是否开始、是否被限制报名、是否重复报名，最后原子扣减名额并写入明细。
 
 ```java
-register(Integer activityId, Integer userId) {
+    public void register(Integer activityId, Integer userId) {
         Activity activity = activityMapper.selectById(activityId);
         if (activity == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "活动不存在");
@@ -32,7 +32,8 @@ register(Integer activityId, Integer userId) {
 
         LocalDateTime now = LocalDateTime.now();
         if (now.isAfter(activity.getSignupDeadline())) {
-            throw new BusinessException("报名已于 " + DATE_FORMAT.format(activity.getSignupDeadline()) + " 截止");
+            throw new BusinessException("报名已于 " +
+        DATE_FORMAT.format(activity.getSignupDeadline()) + " 截止");
         }
         if (!now.isBefore(activity.getStartTime())) {
             throw new BusinessException("活动已经开始，无法报名");
@@ -102,7 +103,8 @@ register(Integer activityId, Integer userId) {
             targetStatus = Constants.REG_SIGNED_UP;
             sendNotice(userId, "报名成功",
                     "你已成功报名「" + activity.getTitle() + "」，活动时间 "
-                            + DATE_FORMAT.format(activity.getStartTime()) + "，地点 " + activity.getLocation() + "。",
+                            + DATE_FORMAT.format(activity.getStartTime()) + "，地点 " +
+        activity.getLocation() + "。",
                     Constants.NOTICE_ACTIVITY);
         }
 
@@ -126,10 +128,12 @@ register(Integer activityId, Integer userId) {
 
 ## A.3 签到码的生成与复用
 
-文件：`src/main/java/com/campus/activity/service/impl/CheckinServiceImpl.java`。有效期内重复生成会复用同一签到码，有效期不晚于活动结束时间。
+src/main/java/com/campus/activity/service/impl/CheckinServiceImpl.java
+
+有效期内重复生成会复用同一签到码，有效期不晚于活动结束时间。
 
 ```java
-generateCode(Integer activityId, Integer operatorId, boolean admin) {
+    public CheckinCodeVO generateCode(Integer activityId, Integer operatorId, boolean admin) {
         Activity activity = checkOwner(activityId, operatorId, admin);
         LocalDateTime now = LocalDateTime.now();
         checkInTimeWindow(activity, now);
@@ -161,19 +165,11 @@ generateCode(Integer activityId, Integer operatorId, boolean admin) {
 
 ## A.4 活动质量分计算
 
-文件：`src/main/java/com/campus/activity/service/impl/ActivityServiceImpl.java`。签到率、评分归一化与完成率按 4:4:2 加权，读取时实时计算。
+src/main/java/com/campus/activity/service/impl/ActivityServiceImpl.java
+
+签到率、评分归一化与完成率按 4:4:2 加权，读取时实时计算。
 
 ```java
-calcQualityScore(vo));
-        return vo;
-    }
-
-    /**
-     * 质量分 = 签到率 × 40 + 评分归一化 × 40 + 完成率 × 20
-     * 签到率 = 已签到 / 报名人数；评分归一化 = (均分 - 1) / 4，把 1~5 星映射到 0~1；
-     * 完成率 = 1 - 取消率，即报名后没有取消的比例。
-     * 没有报名数据时记 0，避免除零；没有评价时评分项按 0 计算。
-     */
     private double calcQualityScore(ActivityDetailVO vo) {
         int joined = vo.getJoinedCount() == null ? 0 : vo.getJoinedCount();
         int checkin = vo.getCheckinCount() == null ? 0 : vo.getCheckinCount();
@@ -191,7 +187,9 @@ calcQualityScore(vo));
 
 # 附录 B 数据库建表脚本
 
-文件：`db/schema.sql`。脚本仅使用 MySQL 与 H2 的公共语法子集，索引另见 `db/indexes.sql`。
+db/schema.sql
+
+脚本仅使用 MySQL 与 H2 的公共语法子集，索引另见 db/indexes.sql。
 
 ```sql
 -- ============================================================================
@@ -314,72 +312,72 @@ CREATE TABLE sys_config (
 
 # 附录 C 接口清单
 
-系统共提供 58 个业务接口，均以 `/api` 为前缀；除登录、注册与健康检查外，均需在请求头携带 `Authorization: Bearer <token>`。
+系统共提供 58 个业务接口，均以 /api 为前缀；除登录、注册与健康检查外，均需在请求头携带 Authorization: Bearer <token>。
 
 | 方法 | 路径 | 权限 | 说明 |
 |---|---|---|---|
-| POST | `/api/activity` | ORGANIZER | 发布；`draft=false` 直接提交审核，`draft=true` 存草稿 |
-| POST | `/api/announcement` | ADMIN | 新增 `{ title, content, status }` |
-| POST | `/api/category` | ADMIN | 新增 `{ name, sort, status }` |
-| GET | `/api/activity/my` | ORGANIZER | 我发布的活动 `status, keyword, pageNum, pageSize` |
-| GET | `/api/activity/page` | 登录 | 已发布活动分页 |
-| GET | `/api/activity/{id}` | 登录 | 活动详情（含统计与当前用户报名状态） |
-| PUT | `/api/activity/{id}` | ORGANIZER | 编辑（草稿、待审核、已驳回可改；改后重新进入待审核） |
-| GET | `/api/announcement/list` | 登录 | 首页公告（最多 10 条，仅已发布） |
-| GET | `/api/announcement/page` | 登录 | 分页 `pageNum, pageSize, keyword, status` |
-| PUT | `/api/announcement/{id}` | ADMIN | 修改 |
-| DELETE | `/api/announcement/{id}` | ADMIN | 删除 |
-| POST | `/api/auth/login` | 登录 | 登录 |
-| POST | `/api/auth/register` | 登录 | 注册（只能注册为学生） |
-| GET | `/api/category/all` | ADMIN | 全部分类（含停用，管理页用） |
-| GET | `/api/category/list` | 登录 | 启用中的分类（学生端筛选、发布活动用） |
-| PUT | `/api/category/{id}` | ADMIN | 修改 |
-| DELETE | `/api/category/{id}` | ADMIN | 删除（有活动引用时拒绝） |
-| POST | `/api/checkin/{activityId}` | 登录 | 学生凭码签到 `{ "code": "123456" }` |
-| GET | `/api/config/list` | ADMIN | 参数列表 |
-| PUT | `/api/config/{id}` | ADMIN | 修改 `{ "configValue": "3" }` |
-| GET | `/api/notice/my` | 登录 | 我的消息 `pageNum, pageSize, isRead, type` |
-| PUT | `/api/notice/read-all` | 登录 | 全部已读 |
-| GET | `/api/notice/unread-count` | 登录 | `{ "count": 3 }` |
-| DELETE | `/api/notice/{id}` | 登录 | 删除 |
-| GET | `/api/registration/my` | 登录 | 我的报名 `status, activityStatus, keyword, pageNum, pageSize` |
-| POST | `/api/registration/{activityId}` | 登录 | 报名（原子占名额，可能返回"名额已满"） |
-| DELETE | `/api/registration/{activityId}` | 登录 | 取消报名 |
-| GET | `/api/review/my` | 登录 | 我的评价 |
-| POST | `/api/review/{activityId}` | 登录 | 提交评价 `{ score: 1~5, content, anonymous }` |
-| DELETE | `/api/review/{reviewId}` | 登录/ADMIN | 删除（本人或管理员） |
-| GET | `/api/stat/category` | ORGANIZER/ADMIN | 分类分布 |
-| GET | `/api/stat/organizer` | ORGANIZER/ADMIN | 我的活动总览（管理员看全平台） |
-| GET | `/api/stat/overview` | ADMIN | 平台总览 |
-| GET | `/api/stat/top?limit=5` | ORGANIZER/ADMIN | 报名排行（≤20） |
-| GET | `/api/stat/trend?days=7` | ORGANIZER/ADMIN | 近 N 天报名/签到趋势（≤30） |
-| POST | `/api/user/avatar` | 登录 | 上传头像，`multipart/form-data`，字段名 `file`，返回头像 URL |
-| GET | `/api/user/info` | 登录 | 当前用户信息（含 `banUntil`、`violationCount`） |
-| GET | `/api/user/page` | ADMIN | 用户分页 `pageNum, pageSize, role, keyword, status` |
-| PUT | `/api/user/password` | 登录 | 改密码 `{ oldPassword, newPassword }` |
-| PUT | `/api/user/profile` | 登录 | 改资料 `{ realName, phone, email, avatar }` |
-| GET | `/api/activity/audit/page` | ADMIN | 待审核列表 |
-| PUT | `/api/activity/{id}/audit` | ADMIN | 审核 `{ pass: true/false, remark }`，驳回时 remark 必填（兼容 `reason`） |
-| PUT | `/api/activity/{id}/cancel` | ORGANIZER | 取消活动（活动开始后不可取消），批量通知报名者 |
-| PUT | `/api/announcement/{id}/status?status=1` | ADMIN | 上架/下架 |
-| POST | `/api/checkin/manual/{registrationId}` | ORGANIZER/ADMIN | 手动补签 |
-| POST | `/api/checkin/{activityId}/code` | ORGANIZER/ADMIN | 生成（或复用）签到码 |
-| GET | `/api/checkin/{activityId}/code` | ORGANIZER/ADMIN | 查询当前有效码（**只读，不生成**） |
-| POST | `/api/checkin/{activityId}/finish` | ORGANIZER/ADMIN | 提前结束活动并判定爽约，`data` 返回爽约人数 |
-| GET | `/api/checkin/{activityId}/list` | ORGANIZER/ADMIN | 签到名单 `status, keyword, pageNum, pageSize` |
-| GET | `/api/checkin/{activityId}/stat` | ORGANIZER/ADMIN | 签到统计 |
-| PUT | `/api/notice/{id}/read` | 登录 | 单条已读 |
-| GET | `/api/registration/activity/{activityId}` | ORGANIZER/ADMIN | 报名名单 `status, keyword(姓名/用户名/学号), pageNum, pageSize` |
-| PUT | `/api/registration/{registrationId}/audit` | ORGANIZER/ADMIN | 审核报名 `{ pass: true/false, reason }`，驳回时 reason 写入通知 |
-| GET | `/api/review/activity/{activityId}` | 登录 | 评价分页 `pageNum, pageSize` |
-| PUT | `/api/user/{id}/reset-password` | ADMIN | 重置为默认密码 `123456` |
-| PUT | `/api/user/{id}/role?role=ORGANIZER` | ADMIN | 改角色 |
-| PUT | `/api/user/{id}/status?status=1` | ADMIN | 启用/禁用 |
-| GET | `/api/review/activity/{activityId}/stat` | 登录 | 评分分布 |
+| POST | /api/activity | ORGANIZER | 发布；`draft=false` 直接提交审核，`draft=true` 存草稿 |
+| POST | /api/announcement | ADMIN | 新增 `{ title, content, status }` |
+| POST | /api/category | ADMIN | 新增 `{ name, sort, status }` |
+| GET | /api/activity/my | ORGANIZER | 我发布的活动 `status, keyword, pageNum, pageSize` |
+| GET | /api/activity/page | 登录 | 已发布活动分页 |
+| GET | /api/activity/{id} | 登录 | 活动详情（含统计与当前用户报名状态） |
+| PUT | /api/activity/{id} | ORGANIZER | 编辑（草稿、待审核、已驳回可改；改后重新进入待审核） |
+| GET | /api/announcement/list | 登录 | 首页公告（最多 10 条，仅已发布） |
+| GET | /api/announcement/page | 登录 | 分页 `pageNum, pageSize, keyword, status` |
+| PUT | /api/announcement/{id} | ADMIN | 修改 |
+| DELETE | /api/announcement/{id} | ADMIN | 删除 |
+| POST | /api/auth/login | 登录 | 登录 |
+| POST | /api/auth/register | 登录 | 注册（只能注册为学生） |
+| GET | /api/category/all | ADMIN | 全部分类（含停用，管理页用） |
+| GET | /api/category/list | 登录 | 启用中的分类（学生端筛选、发布活动用） |
+| PUT | /api/category/{id} | ADMIN | 修改 |
+| DELETE | /api/category/{id} | ADMIN | 删除（有活动引用时拒绝） |
+| POST | /api/checkin/{activityId} | 登录 | 学生凭码签到 `{ "code": "123456" }` |
+| GET | /api/config/list | ADMIN | 参数列表 |
+| PUT | /api/config/{id} | ADMIN | 修改 `{ "configValue": "3" }` |
+| GET | /api/notice/my | 登录 | 我的消息 `pageNum, pageSize, isRead, type` |
+| PUT | /api/notice/read-all | 登录 | 全部已读 |
+| GET | /api/notice/unread-count | 登录 | `{ "count": 3 }` |
+| DELETE | /api/notice/{id} | 登录 | 删除 |
+| GET | /api/registration/my | 登录 | 我的报名 `status, activityStatus, keyword, pageNum, pageSize` |
+| POST | /api/registration/{activityId} | 登录 | 报名（原子占名额，可能返回"名额已满"） |
+| DELETE | /api/registration/{activityId} | 登录 | 取消报名 |
+| GET | /api/review/my | 登录 | 我的评价 |
+| POST | /api/review/{activityId} | 登录 | 提交评价 `{ score: 1~5, content, anonymous }` |
+| DELETE | /api/review/{reviewId} | 登录/ADMIN | 删除（本人或管理员） |
+| GET | /api/stat/category | ORGANIZER/ADMIN | 分类分布 |
+| GET | /api/stat/organizer | ORGANIZER/ADMIN | 我的活动总览（管理员看全平台） |
+| GET | /api/stat/overview | ADMIN | 平台总览 |
+| GET | /api/stat/top?limit=5 | ORGANIZER/ADMIN | 报名排行（≤20） |
+| GET | /api/stat/trend?days=7 | ORGANIZER/ADMIN | 近 N 天报名/签到趋势（≤30） |
+| POST | /api/user/avatar | 登录 | 上传头像，`multipart/form-data`，字段名 `file`，返回头像 URL |
+| GET | /api/user/info | 登录 | 当前用户信息（含 `banUntil`、`violationCount`） |
+| GET | /api/user/page | ADMIN | 用户分页 `pageNum, pageSize, role, keyword, status` |
+| PUT | /api/user/password | 登录 | 改密码 `{ oldPassword, newPassword }` |
+| PUT | /api/user/profile | 登录 | 改资料 `{ realName, phone, email, avatar }` |
+| GET | /api/activity/audit/page | ADMIN | 待审核列表 |
+| PUT | /api/activity/{id}/audit | ADMIN | 审核 `{ pass: true/false, remark }`，驳回时 remark 必填（兼容 `reason`） |
+| PUT | /api/activity/{id}/cancel | ORGANIZER | 取消活动（活动开始后不可取消），批量通知报名者 |
+| PUT | /api/announcement/{id}/status?status=1 | ADMIN | 上架/下架 |
+| POST | /api/checkin/manual/{registrationId} | ORGANIZER/ADMIN | 手动补签 |
+| POST | /api/checkin/{activityId}/code | ORGANIZER/ADMIN | 生成（或复用）签到码 |
+| GET | /api/checkin/{activityId}/code | ORGANIZER/ADMIN | 查询当前有效码（**只读，不生成**） |
+| POST | /api/checkin/{activityId}/finish | ORGANIZER/ADMIN | 提前结束活动并判定爽约，`data` 返回爽约人数 |
+| GET | /api/checkin/{activityId}/list | ORGANIZER/ADMIN | 签到名单 `status, keyword, pageNum, pageSize` |
+| GET | /api/checkin/{activityId}/stat | ORGANIZER/ADMIN | 签到统计 |
+| PUT | /api/notice/{id}/read | 登录 | 单条已读 |
+| GET | /api/registration/activity/{activityId} | ORGANIZER/ADMIN | 报名名单 `status, keyword(姓名/用户名/学号), pageNum, pageSize` |
+| PUT | /api/registration/{registrationId}/audit | ORGANIZER/ADMIN | 审核报名 `{ pass: true/false, reason }`，驳回时 reason 写入通知 |
+| GET | /api/review/activity/{activityId} | 登录 | 评价分页 `pageNum, pageSize` |
+| PUT | /api/user/{id}/reset-password | ADMIN | 重置为默认密码 `123456` |
+| PUT | /api/user/{id}/role?role=ORGANIZER | ADMIN | 改角色 |
+| PUT | /api/user/{id}/status?status=1 | ADMIN | 启用/禁用 |
+| GET | /api/review/activity/{activityId}/stat | 登录 | 评分分布 |
 
 # 附录 D 功能测试用例
 
-共设计 98 条功能用例，均在 H2 演示库与云端 MySQL 8.4 两套环境各执行一遍，结果一致。此处列出用例编号、名称、预期结果与执行结果，前置条件与操作步骤见 `doc/04-测试用例.md`。
+共设计 98 条功能用例，均在 H2 演示库与云端 MySQL 8.4 两套环境各执行一遍，结果一致。此处列出编号、名称、预期结果与执行结果，前置条件与操作步骤见 doc/04-测试用例.md。
 
 | 编号 | 用例 | 预期结果 | 结果 |
 |---|---|---|---|
