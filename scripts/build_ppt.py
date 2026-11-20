@@ -356,8 +356,8 @@ def build():
          RGBColor(0xDD, 0xE6, 0xE3))
     text(s, "三项加权的理由", Inches(8.55), Inches(2.0), Inches(3.8), Inches(0.45), 17, True, PRIMARY)
     text(s, "报名人数易被刷高；\n仅看评分则样本偏差较大；\n仅看签到率难以反映内容质量。\n"
-            "三项加权后，参与规模较小但组织扎实的活动\n同样能够获得较高分数。",
-         Inches(8.55), Inches(2.5), Inches(3.8), Inches(2.6), 14, False, GREY)
+            "三项加权后，参与规模较小但组织扎实的活动，\n同样能拿到较高分数。",
+         Inches(8.55), Inches(2.5), Inches(3.9), Inches(2.6), 14, False, GREY)
     text(s, "质量分 = (签到率×w1 + 评分归一化×w2 + 完成率×w3) ÷ (w1+w2+w3) × 100", Inches(0.7),
          Inches(5.55), Inches(11.9), Inches(0.5), 17, True, DARK)
     text(s, "默认权重下：80 人报名、60 人签到、均分 4.2、无人取消 → 30 + 32 + 20 = 82 分",
