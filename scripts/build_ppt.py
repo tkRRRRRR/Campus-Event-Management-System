@@ -242,7 +242,7 @@ def build():
 
     # 3 需求与角色
     s = blank(prs)
-    title(s, "需求分析：三类角色与功能边界", "8 张表、42 个接口、19 个页面")
+    title(s, "需求分析：三类角色与功能边界", "8 张表、58 个接口、19 个页面")
     roles = [
         ("学生", "活动浏览、报名、签到与评价", "浏览检索 / 报名取消 / 扫码签到 / 提交评价 / 消息"),
         ("组织者", "活动发布、名单管理与数据查看", "发布编辑 / 报名审核 / 签到码与补签 / 活动统计"),
@@ -429,7 +429,7 @@ def build():
     bullets(s, ["Dockerfile 多阶段构建，镜像内含 JRE，内存限制 256MB",
                 "数据库连接串与密钥全部走环境变量，仓库里不留明文"],
             Inches(4.9), Inches(0.7), Inches(11.6), 16, 0.6)
-    notes(s, "现场用便携包，线上用 Render 加 Vercel，两种方式都验证过。")
+    notes(s, "现场以便携包演示；云端形态仅完成配置，未实际部署，详见论文 6.4 节。")
 
     # 15 不足与展望
     s = blank(prs)
@@ -443,7 +443,7 @@ def build():
         rect(s, Inches(0.7), y + Inches(0.16), Inches(0.07), Inches(0.3), PRIMARY)
         text(s, h, Inches(1.0), y + Inches(0.1), Inches(4.0), Inches(0.45), 18, True, DARK)
         text(s, d, Inches(5.0), y + Inches(0.14), Inches(7.6), Inches(0.55), 15, False, GREY)
-    notes(s, "不足部分主动说，避免答辩时被追问。")
+    notes(s, "不足与改进方向对应论文第 7 章，均有明确的下一步。")
 
     # 16 结束
     s = blank(prs)
@@ -452,7 +452,7 @@ def build():
     text(s, "感谢各位老师", Inches(1.0), Inches(2.85), Inches(9), Inches(0.9), 40, True, WHITE)
     text(s, "请批评指正", Inches(1.0), Inches(3.75), Inches(9), Inches(0.6), 24, False,
          RGBColor(0xBF, 0xDA, 0xD1))
-    text(s, "演示地址：http://127.0.0.1:8080（便携包）　线上：待部署", Inches(1.0), Inches(4.75),
+    text(s, "演示方式：便携包本地启动，访问 http://127.0.0.1:8080", Inches(1.0), Inches(4.75),
          Inches(11), Inches(0.4), 14, False, RGBColor(0x9A, 0xC8, 0xB8))
     notes(s, "汇报结束，请老师提问。")
 

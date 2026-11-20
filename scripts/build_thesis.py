@@ -245,6 +245,16 @@ def build():
         with open(os.path.join(THESIS_DIR, name), encoding="utf-8") as fh:
             parts.append(fh.read())
     md = "\n".join(parts)
+    appendix = os.path.join(THESIS_DIR, "appendix.md")
+    if os.path.exists(appendix):
+        with open(appendix, encoding="utf-8") as fh:
+            ap = fh.read()
+        # 附录排在参考文献之后、致谢之前
+        marker = "\n# 致谢"
+        if marker in md:
+            md = md.replace(marker, "\n" + ap.strip() + "\n" + marker, 1)
+        else:
+            md = md + "\n" + ap
     lines = md.split("\n")
 
     doc = Document()
