@@ -121,7 +121,7 @@
         <el-button size="small" icon="el-icon-refresh" @click="refreshAll">刷新</el-button>
       </div>
 
-      <el-table v-loading="loading" :data="list" size="small" stripe empty-text="暂无签到记录">
+      <el-table v-loading="loading" :data="list" size="small" stripe class="only-desktop" empty-text="暂无签到记录">
         <el-table-column label="姓名" width="110">
           <template slot-scope="{ row }">{{ row.realName || '-' }}</template>
         </el-table-column>
@@ -151,6 +151,22 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="only-mobile m-list" v-loading="loading">
+        <div class="m-card" v-for="row in list" :key="row.id">
+          <div class="m-card-head">
+            <span class="m-card-title">{{ row.realName || '-' }}</span>
+            <status-tag :status="row.status" kind="registration" />
+          </div>
+          <div class="m-card-meta">学号 {{ row.studentNo || '-' }}</div>
+          <div class="m-card-meta">签到时间 {{ fmtDateTime(row.checkinTime) }}</div>
+          <div class="m-card-meta">签到方式 {{ checkinTypeText(row.checkinType) }}</div>
+          <div class="m-card-actions">
+            <el-button v-if="row.status === 1" size="mini" @click="handleManualCheckin(row)">补签</el-button>
+          </div>
+        </div>
+        <div class="empty-box" v-if="!list.length">暂无签到记录</div>
+      </div>
 
       <div class="pager">
         <el-pagination
