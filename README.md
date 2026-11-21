@@ -12,9 +12,9 @@
 
 | 环境 | 地址 |
 |---|---|
-| 前端（Vercel） | <https://campus-activity-web.vercel.app> |
-| 后端 API（Render） | <https://campus-activity-api.onrender.com> |
-| 健康检查 | <https://campus-activity-api.onrender.com/api/ping> |
+| 前端 | <https://campus.taikong.de> |
+| 后端 API | <https://campus-api.taikong.de> |
+| 健康检查 | <https://campus-api.taikong.de/api/ping> |
 
 线上为前后端分离部署：Vercel 托管前端构建产物，Render 以 Docker 运行后端 jar，数据库为云端 MySQL。
 免费实例空闲 15 分钟会休眠，首次访问需 30~60 秒；容器文件系统临时，上传的封面/头像重启后丢失。

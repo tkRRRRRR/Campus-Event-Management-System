@@ -426,7 +426,7 @@ def build():
         text(s, h, x + Inches(0.22), Inches(2.05), Inches(2.4), Inches(0.45), 18, True, PRIMARY)
         text(s, d, x + Inches(0.22), Inches(2.55), Inches(2.45), Inches(1.2), 13, False, GREY)
         text(s, tag, x + Inches(0.22), Inches(3.9), Inches(2.4), Inches(0.4), 13, True, ORANGE)
-    text(s, "线上地址：前端 https://campus-activity-web.vercel.app　后端 https://campus-activity-api.onrender.com",
+    text(s, "线上地址：前端 https://campus.taikong.de　后端 https://campus-api.taikong.de",
          Inches(0.7), Inches(4.75), Inches(11.9), Inches(0.4), 14, True, PRIMARY)
     bullets(s, ["Dockerfile 多阶段构建，镜像内含 JRE，内存限制 256MB",
                 "数据库连接串与密钥全部走环境变量，仓库里不留明文",
