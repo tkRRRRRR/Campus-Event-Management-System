@@ -116,4 +116,27 @@ export default {
   color: #a8abb2;
   line-height: 1.7;
 }
+@media (max-width: 768px) {
+  .login-page {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 32px 16px 28px;
+    gap: 22px;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+  .brand { max-width: 100%; text-align: center; margin: 0 auto; }
+  .brand h1 { font-size: 24px; line-height: 1.35; margin: 0 0 8px; }
+  .brand p { font-size: 13px; margin: 0; }
+  .brand ul { display: none; }
+  .panel {
+    width: 100%;
+    max-width: 100%;
+    padding: 22px 18px 18px;
+    border-radius: 14px;
+  }
+  .panel h2 { font-size: 18px; margin-bottom: 16px; }
+  .demo { font-size: 12px; line-height: 1.7; }
+  .tips { font-size: 12px; }
+}
 </style>

@@ -21,7 +21,7 @@
         <el-button type="primary" icon="el-icon-plus" @click="openCreate">新增公告</el-button>
       </div>
 
-      <el-table v-loading="loading" :data="list" border stripe empty-text="暂无公告">
+      <el-table v-loading="loading" :data="list" border stripe empty-text="暂无公告" class="only-desktop">
         <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
         <el-table-column label="内容摘要" min-width="280">
           <template slot-scope="scope">
@@ -51,6 +51,27 @@
           </template>
         </el-table-column>
       </el-table>
+      <div class="only-mobile m-list">
+        <div class="m-card" v-for="row in list" :key="row.id">
+          <div class="m-card-head">
+            <div class="m-card-title">{{ row.title }}</div>
+            <el-switch
+              v-model="row.status"
+              :active-value="1"
+              :inactive-value="0"
+              :disabled="statusSavingId === row.id"
+              @change="handleStatusChange(row)" />
+          </div>
+          <div class="m-card-meta">发布 {{ fmtDateTime(row.createTime) }} · {{ row.status === 1 ? '已发布' : '已下架' }}</div>
+          <div class="m-card-text">{{ row.content }}</div>
+          <div class="m-card-actions">
+            <el-button size="mini" @click="openEdit(row)">编辑</el-button>
+            <el-button size="mini" type="danger" plain @click="handleDelete(row)">删除</el-button>
+          </div>
+        </div>
+        <div class="empty-box" v-if="!loading && !list.length">暂无公告</div>
+      </div>
+
 
       <div class="pager" v-if="total > 0">
         <el-pagination
@@ -297,4 +318,5 @@ export default {
 .danger-text {
   color: #f56c6c;
 }
+.m-card-text { font-size: 12px; color: #909399; line-height: 1.5; margin: 4px 0 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 </style>

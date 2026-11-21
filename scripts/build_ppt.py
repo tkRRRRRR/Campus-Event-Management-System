@@ -366,12 +366,18 @@ def build():
 
     # 10 界面：学生端
     s = blank(prs)
-    title(s, "实现效果：学生端", "登录后展示公告、热门活动与最新发布内容")
-    image_fit(s, os.path.join(FIG_DIR, "04-student-home.png"), Inches(0.55), Inches(1.55),
-              Inches(6.0), Inches(5.2))
-    image_fit(s, os.path.join(FIG_DIR, "05-student-activities.png"), Inches(6.75), Inches(1.55),
-              Inches(6.0), Inches(5.2))
-    notes(s, "学生端首页和活动中心，筛选、搜索、排序在前端完成参数拼装，后端分页。")
+    title(s, "实现效果：学生端（桌面与手机）", "同一套页面，窄屏自动切换为抽屉菜单与底部导航")
+    s.shapes.add_picture(os.path.join(FIG_DIR, "04-student-home.png"),
+                         Inches(0.5), Inches(1.5), width=Inches(6.6))
+    s.shapes.add_picture(os.path.join(FIG_DIR, "..", "mobile", "home.png"),
+                         Inches(7.35), Inches(1.5), width=Inches(2.05))
+    bullets(s, ["手机端 390×844 实测：底部导航、卡片列表、热门活动横向滑动",
+                "表格在窄屏改为卡片，弹窗与表单整宽，按钮高度不小于 36 像素",
+                "报名与签到在手机上无需缩放即可完成",
+                "桌面端 1440 像素保持原布局，未做降级"],
+            Inches(1.7), Inches(9.75), Inches(3.3), 13, 0.8)
+    notes(s, "学生端首页与活动中心；768 像素以下切换移动端布局，"
+             "手机截图保存在 doc/mobile，桌面回归截图在 doc/desktop。")
 
     # 11 界面：详情与签到
     s = blank(prs)

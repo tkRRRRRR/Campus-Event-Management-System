@@ -19,9 +19,8 @@
         <h3>热门活动</h3>
         <el-link type="primary" :underline="false" @click="$router.push('/activities')">查看全部</el-link>
       </div>
-      <el-row :gutter="16">
-        <el-col :span="8" v-for="item in hotList" :key="item.id">
-          <div class="activity-card" @click="openActivity(item.id)">
+      <div class="hot-grid">
+        <div class="activity-card" v-for="item in hotList" :key="item.id" @click="openActivity(item.id)">
             <div class="cover-box">
               <img v-if="item.coverUrl" :src="resolveUrl(item.coverUrl)" class="cover" :alt="item.title" />
               <div v-else class="cover-fallback">{{ item.categoryName || '活动' }}</div>
@@ -36,9 +35,8 @@
                 <status-tag :status="item.status" />
               </div>
             </div>
-          </div>
-        </el-col>
-      </el-row>
+        </div>
+      </div>
       <div class="empty-box" v-if="!loadingHot && !hotList.length">暂无活动</div>
     </div>
 
@@ -236,6 +234,34 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.hot-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.hot-grid .card-body h4 { height: auto; min-height: 40px; }
+@media (max-width: 768px) {
+  .banner-item { padding: 14px 16px; }
+  .banner-item h3 { font-size: 16px; line-height: 1.45; margin: 4px 0 6px; }
+  .banner-item p { -webkit-line-clamp: 2; font-size: 12px; line-height: 1.6; }
+  .hot-grid {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 2px 8px;
+  }
+  .hot-grid::-webkit-scrollbar { display: none; }
+  .hot-grid .activity-card {
+    min-width: 76%;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+  .cover-box { height: 118px; }
+  .latest-item { padding: 10px; gap: 10px; align-items: flex-start; }
+  .latest-cover { width: 96px; height: 72px; }
+  .latest-title { font-size: 14px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 6px; }
+  .latest-body .meta { flex-wrap: wrap; gap: 4px 10px; }
+  .summary { margin-top: 6px; font-size: 12px; white-space: normal; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; }
+  .section { margin-bottom: 18px; }
 }
 .announce-content { line-height: 1.8; white-space: pre-wrap; color: #606266; }
 </style>

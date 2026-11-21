@@ -1,6 +1,6 @@
 <template>
-  <el-container class="layout">
-    <el-aside width="212px" class="aside">
+  <el-container class="layout" :class="{ 'has-tabbar': showTabbar }">
+    <el-aside v-if="!isMobile" width="212px" class="aside">
       <div class="logo">
         <i class="el-icon-s-promotion"></i>
         <span>校园活动管理</span>
@@ -20,8 +20,37 @@
       </el-menu>
     </el-aside>
 
+    <el-drawer
+      v-else
+      :visible.sync="drawer"
+      direction="ltr"
+      size="74%"
+      :with-header="false"
+      class="m-drawer"
+    >
+      <div class="logo">
+        <i class="el-icon-s-promotion"></i>
+        <span>校园活动管理</span>
+      </div>
+      <el-menu
+        :default-active="activeMenu"
+        class="menu"
+        background-color="#1f5a4f"
+        text-color="#cfe3dd"
+        active-text-color="#ffffff"
+        router
+        @select="drawer = false"
+      >
+        <el-menu-item v-for="item in menus" :key="item.path" :index="item.path">
+          <i :class="item.icon"></i>
+          <span slot="title">{{ item.title }}</span>
+        </el-menu-item>
+      </el-menu>
+    </el-drawer>
+
     <el-container>
       <el-header height="56px" class="header">
+        <i v-if="isMobile" class="el-icon-s-fold ham" @click="drawer = true"></i>
         <div class="crumb">{{ currentTitle }}</div>
         <div class="spacer"></div>
         <el-tooltip content="消息中心" placement="bottom">
@@ -34,8 +63,8 @@
         <el-dropdown trigger="click" @command="onCommand">
           <span class="user">
             <el-avatar :size="28" :src="avatar"><i class="el-icon-user"></i></el-avatar>
-            <span class="name">{{ user.realName || user.username }}</span>
-            <el-tag size="mini" type="primary" effect="plain">{{ roleText }}</el-tag>
+            <span v-if="!isMobile" class="name">{{ user.realName || user.username }}</span>
+            <el-tag v-if="!isMobile" size="mini" type="primary" effect="plain">{{ roleText }}</el-tag>
             <i class="el-icon-arrow-down"></i>
           </span>
           <el-dropdown-menu slot="dropdown">
@@ -50,6 +79,19 @@
           <router-view />
         </transition>
       </el-main>
+
+      <div v-if="showTabbar" class="tabbar">
+        <div
+          v-for="tab in tabs"
+          :key="tab.path"
+          class="tab-item"
+          :class="{ active: isTabActive(tab) }"
+          @click="go(tab.path)"
+        >
+          <i :class="tab.icon"></i>
+          <span>{{ tab.title }}</span>
+        </div>
+      </div>
     </el-container>
   </el-container>
 </template>
@@ -59,14 +101,31 @@ import { mapGetters } from 'vuex'
 import { unreadCount } from '@/api/notice'
 import { resolveUrl } from '@/utils/request'
 import { ROLE_TEXT } from '@/utils/format'
+import { device } from '@/utils/device'
 
 export default {
   name: 'MainLayout',
   data () {
-    return { unread: 0, timer: null }
+    return {
+      unread: 0,
+      timer: null,
+      drawer: false,
+      tabs: [
+        { path: '/home', title: '首页', icon: 'el-icon-s-home' },
+        { path: '/activities', title: '活动', icon: 'el-icon-s-flag' },
+        { path: '/my-registrations', title: '报名', icon: 'el-icon-tickets' },
+        { path: '/profile', title: '我的', icon: 'el-icon-user' }
+      ]
+    }
   },
   computed: {
     ...mapGetters(['user', 'role']),
+    isMobile () {
+      return device.mobile
+    },
+    showTabbar () {
+      return this.isMobile && this.role === 'STUDENT'
+    },
     roleText () {
       return ROLE_TEXT[this.role] || this.role
     },
@@ -113,6 +172,11 @@ export default {
       return list
     }
   },
+  watch: {
+    $route () {
+      this.drawer = false
+    }
+  },
   mounted () {
     this.refreshUnread()
     this.timer = setInterval(this.refreshUnread, 60000)
@@ -128,6 +192,14 @@ export default {
       } catch (e) {
         this.unread = 0
       }
+    },
+    isTabActive (tab) {
+      const path = this.$route.path
+      if (tab.path === '/activities') return path === '/activities' || path.indexOf('/activity/') === 0
+      return path === tab.path
+    },
+    go (path) {
+      if (this.$route.path !== path) this.$router.push(path)
     },
     onCommand (cmd) {
       if (cmd === 'profile') {
@@ -171,6 +243,12 @@ export default {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   padding: 0 20px;
 }
+.ham {
+  font-size: 22px;
+  color: #303133;
+  margin-right: 10px;
+  cursor: pointer;
+}
 .crumb { font-size: 15px; font-weight: 600; }
 .spacer { flex: 1; }
 .icon-btn {
@@ -188,6 +266,39 @@ export default {
 }
 .user .name { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .main { background: var(--bg); padding: 0; overflow-y: auto; }
-.fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }
-.fade-enter, .fade-leave-to { opacity: 0; }
+
+/* 移动端底部导航 */
+.tabbar {
+  flex: none;
+  display: flex;
+  height: calc(56px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #fff;
+  border-top: 1px solid #eceff3;
+  box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.04);
+}
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #909399;
+  cursor: pointer;
+}
+.tab-item i { font-size: 20px; }
+.tab-item.active { color: var(--primary); }
+
+@media (max-width: 768px) {
+  .header { padding: 0 10px; }
+  .icon-btn { padding: 0 10px; }
+  .m-drawer >>> .el-drawer__body {
+    padding: 0;
+    background: #1f5a4f;
+    display: flex;
+    flex-direction: column;
+  }
+}
 </style>

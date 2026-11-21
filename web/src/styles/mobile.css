@@ -1,0 +1,377 @@
+/* 移动端适配层：只在 <=768px 生效，桌面样式保持原样 */
+
+@media (max-width: 768px) {
+  html, body {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ---------- 页面骨架 ---------- */
+  .page {
+    padding: 12px 12px 24px;
+  }
+  .page-title {
+    font-size: 17px;
+    margin-bottom: 10px;
+  }
+  .card {
+    padding: 14px;
+    border-radius: 10px;
+  }
+  .toolbar {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .toolbar .el-input,
+  .toolbar .el-select,
+  .toolbar .el-date-editor {
+    width: 100% !important;
+  }
+  .pager {
+    margin-top: 12px;
+    text-align: center;
+  }
+  .pager .el-pagination {
+    padding: 0;
+    justify-content: center;
+  }
+
+  /* ---------- 触控尺寸 ---------- */
+  .el-button {
+    min-height: 36px;
+    padding: 9px 14px;
+  }
+  .el-button--mini,
+  .el-button--small {
+    min-height: 32px;
+    padding: 7px 11px;
+  }
+  .el-input__inner,
+  .el-textarea__inner {
+    font-size: 15px; /* 小于 16px 时 iOS 聚焦会放大页面 */
+  }
+  .el-radio-button__inner {
+    padding: 9px 12px;
+  }
+
+  /* ---------- 表单：标签置顶 ---------- */
+  .el-form-item {
+    margin-bottom: 16px;
+  }
+  .el-form-item__label {
+    float: none !important;
+    display: block !important;
+    width: auto !important;
+    text-align: left !important;
+    padding: 0 0 6px 0 !important;
+    line-height: 1.4 !important;
+  }
+  .el-form-item__content {
+    margin-left: 0 !important;
+  }
+  .el-form--inline .el-form-item {
+    margin-right: 0;
+    width: 100%;
+  }
+  .el-date-editor.el-input,
+  .el-date-editor.el-input__inner,
+  .el-select {
+    width: 100% !important;
+  }
+
+  /* ---------- 弹窗：接近全屏 ---------- */
+  .el-dialog {
+    width: calc(100% - 20px) !important;
+    margin: 6vh auto 0 !important;
+    border-radius: 12px;
+  }
+  .el-dialog__header {
+    padding: 16px 16px 8px;
+  }
+  .el-dialog__body {
+    padding: 12px 16px 16px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .el-message-box {
+    width: calc(100% - 40px) !important;
+  }
+
+  /* ---------- 表格：窄屏可横滑，首列吸附 ---------- */
+  .el-table {
+    font-size: 13px;
+  }
+  .el-table th,
+  .el-table td {
+    padding: 6px 0;
+  }
+  .el-table .cell {
+    padding: 0 8px;
+    line-height: 1.5;
+  }
+  .el-table--border,
+  .el-table--group {
+    border-radius: 8px;
+  }
+
+  /* ---------- 标签页、步骤条 ---------- */
+  .el-tabs__item {
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  /* ---------- 图表容器 ---------- */
+  .chart-box {
+    height: 220px !important;
+  }
+
+  /* ---------- 底部安全区 ---------- */
+  .page {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  .has-tabbar .page {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+}
+
+/* 移动端卡片列表：供各页面复用 */
+.m-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.m-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+.m-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.m-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.m-card-meta {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.7;
+}
+
+.m-card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 12px;
+}
+
+.m-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f2f5;
+}
+
+.m-kpi {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.m-kpi .m-card {
+  padding: 12px;
+}
+
+.m-kpi .num {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.m-kpi .label {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.m-cover {
+  width: 100%;
+  height: 132px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  cursor: pointer;
+}
+
+/* 栅格：移动端统一单列 */
+@media (max-width: 768px) {
+  [class*="el-col-"]:not([class*="el-col-xs-"]):not([class*="el-col-sm-"]):not([class*="el-col-md-"]) {
+    width: 100% !important;
+    max-width: 100% !important;
+    float: none !important;
+  }
+  .el-row { margin-left: 0 !important; margin-right: 0 !important; }
+
+  /* 详情页：操作卡吸底 */
+  .top-row > .el-col-7 {
+    margin-bottom: 12px;
+  }
+  .detail-cover { height: 180px !important; }
+}
+
+/* 详情信息：移动端单列，标签定宽 */
+@media (max-width: 768px) {
+  .info-grid {
+    display: block !important;
+  }
+  .info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .info-item label {
+    width: 68px;
+    flex: none;
+    color: #909399;
+  }
+  .info-item span { flex: 1; min-width: 0; }
+
+  /* 表格：横向滚动 + 首列吸附 */
+  .el-table { font-size: 12px; }
+  .el-table th, .el-table td { padding: 6px 0; }
+  .el-table .cell { padding-left: 8px; padding-right: 8px; line-height: 1.45; }
+  .el-table__body-wrapper, .el-table__header-wrapper { overflow-x: auto; }
+  .el-table th:first-child, .el-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #fff;
+  }
+  .el-table th:first-child { background: #fafafa; }
+
+  /* 工具栏、分页、按钮 */
+  .toolbar { flex-wrap: wrap; gap: 8px; }
+  .toolbar .el-input, .toolbar .el-select { width: 100% !important; }
+  .el-pagination { white-space: normal; }
+  .el-pagination .el-pagination__total,
+  .el-pagination .el-pagination__jump { display: none; }
+  .el-button--small { padding: 8px 12px; }
+  .el-dialog { border-radius: 12px; }
+  .el-message-box { width: calc(100% - 24px) !important; }
+  .el-dropdown-menu { min-width: 120px; }
+}
+
+.only-mobile { display: none; }
+@media (max-width: 768px) {
+  .only-desktop { display: none !important; }
+  .only-mobile { display: block; }
+  .m-list { display: flex; flex-direction: column; gap: 10px; }
+  .m-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  }
+  .m-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .m-card-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .m-card-meta {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 12px;
+    color: #7a8288;
+  }
+  .m-card-meta i { margin-right: 4px; }
+  .m-card-actions {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .m-card-actions .el-button { margin-left: 0; }
+}
+
+/* 统计卡：移动端 2×2，压缩高度 */
+@media (max-width: 768px) {
+  .stat-row.kpi {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 0 !important;
+  }
+  .stat-row.kpi > .el-col {
+    float: none !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .stat-row.kpi .stat-card { height: 100%; }
+  .stat-row.kpi::before, .stat-row.kpi::after { display: none !important; }
+  .stat-row.kpi .stat-card { padding: 10px 12px !important; min-height: 0; }
+  .stat-row.kpi .stat-num, .stat-row.kpi .stat-value { font-size: 22px !important; line-height: 1.2; }
+  .stat-row.kpi .stat-label, .stat-row .stat-title { font-size: 12px; }
+  .stat-row.kpi .stat-tip { display: none; }
+}
+
+@media (max-width: 768px) {
+  .chart { height: 220px !important; }
+}
+
+/* 卡片头：移动端纵向排列，避免标题与控件挤在一行 */
+@media (max-width: 768px) {
+  .card-head {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .card-head h3 {
+    flex: 1 0 100%;
+    font-size: 15px;
+    margin: 0;
+  }
+  .card-head .el-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chart-wrap { padding: 8px 0 0; }
+  .card { padding: 12px 14px; }
+}

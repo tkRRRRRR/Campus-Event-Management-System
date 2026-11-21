@@ -34,9 +34,8 @@
 
     <!-- 活动网格 -->
     <div class="card list-card" v-loading="loading">
-      <el-row :gutter="16">
-        <el-col :span="8" v-for="item in list" :key="item.id" class="grid-col">
-          <div class="activity-card" @click="openDetail(item.id)">
+      <div class="list-grid">
+          <div class="activity-card" v-for="item in list" :key="item.id" @click="openDetail(item.id)">
             <div class="cover-box">
               <img v-if="item.coverUrl" :src="resolveUrl(item.coverUrl)" class="cover" :alt="item.title" />
               <div v-else class="cover-fallback">{{ item.categoryName || '活动' }}</div>
@@ -51,8 +50,7 @@
               </div>
             </div>
           </div>
-        </el-col>
-      </el-row>
+      </div>
 
       <div class="empty-box" v-if="!loading && !list.length">暂无符合条件的活动</div>
 
@@ -196,4 +194,15 @@ export default {
   min-height: 22px;
 }
 .join { font-size: 12px; color: var(--primary); }
+.list-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 768px) {
+  .list-grid { grid-template-columns: 1fr; gap: 12px; }
+  .activity-card { display: flex; align-items: stretch; }
+  .activity-card .cover-box { width: 118px; height: auto; min-height: 118px; flex: none; }
+  .activity-card .card-body { flex: 1; min-width: 0; padding: 10px 12px; }
+  .activity-card .card-body h4 { height: auto; min-height: 0; margin-bottom: 6px; font-size: 14px; line-height: 1.4; }
+  .activity-card .card-body .meta { font-size: 12px; }
+  .list-card { min-height: 0; }
+  .el-pagination { justify-content: center; }
+}
 </style>

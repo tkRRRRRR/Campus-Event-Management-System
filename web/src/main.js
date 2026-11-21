@@ -5,6 +5,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import '@/styles/global.css'
+import '@/styles/mobile.css'
 
 Vue.use(ElementUI, { size: 'small' })
 

@@ -30,7 +30,7 @@
         <el-button size="small" type="primary" icon="el-icon-plus" @click="goCreate">发布活动</el-button>
       </div>
 
-      <el-table v-loading="loading" :data="list" size="small" stripe empty-text="暂无活动">
+      <el-table class="only-desktop" v-loading="loading" :data="list" size="small" stripe empty-text="暂无活动">
         <el-table-column label="封面" width="88" align="center">
           <template slot-scope="{ row }">
             <div class="thumb">
@@ -86,6 +86,29 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="only-mobile m-list" v-loading="loading">
+        <div class="m-card" v-for="row in list" :key="row.id">
+          <div class="m-card-head">
+            <div class="m-card-title">{{ row.title }}</div>
+            <status-tag :status="row.status" />
+          </div>
+          <div class="m-card-meta">
+            <div><i class="el-icon-collection-tag"></i>{{ row.categoryName || '未分类' }} · 报名 {{ row.signedCount || 0 }}/{{ row.capacity || 0 }}</div>
+            <div><i class="el-icon-time"></i>{{ fmtDateTime(row.startTime) }}</div>
+            <div v-if="row.status === 3" class="m-reason">
+              <i class="el-icon-warning-outline"></i>驳回理由：{{ row.auditRemark || '暂无' }}
+            </div>
+          </div>
+          <div class="m-card-actions">
+            <el-button v-if="canEdit(row)" size="mini" @click="goEdit(row)">编辑</el-button>
+            <el-button size="mini" @click="goRegistrations(row)">报名名单</el-button>
+            <el-button size="mini" @click="goCheckin(row)">签到管理</el-button>
+            <el-button v-if="canCancel(row)" size="mini" type="danger" plain @click="handleCancel(row)">取消活动</el-button>
+          </div>
+        </div>
+        <div class="empty-box" v-if="!loading && !list.length">暂无活动</div>
+      </div>
 
       <div class="pager">
         <el-pagination
@@ -269,4 +292,5 @@ export default {
 .text-danger {
   color: #f56c6c;
 }
+.m-reason { color: #e6a23c; }
 </style>

@@ -17,7 +17,7 @@
       </div>
     </div>
 
-    <el-row :gutter="14" class="stat-row">
+    <el-row :gutter="14" class="stat-row kpi">
       <el-col v-for="item in statCards" :key="item.key" :span="6">
         <div class="card stat-card" :class="'stat-' + item.key">
           <div class="num">{{ item.value }}</div>
@@ -60,7 +60,7 @@
         <el-button size="small" icon="el-icon-refresh" @click="refreshAll">刷新</el-button>
       </div>
 
-      <el-table v-loading="loading" :data="list" size="small" stripe empty-text="暂无报名记录">
+      <el-table class="only-desktop" v-loading="loading" :data="list" size="small" stripe empty-text="暂无报名记录">
         <el-table-column label="姓名" width="100">
           <template slot-scope="{ row }">{{ row.realName || '-' }}</template>
         </el-table-column>
@@ -101,6 +101,30 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="only-mobile m-list" v-loading="loading">
+        <div class="m-card" v-for="row in list" :key="row.id">
+          <div class="m-card-head">
+            <div class="m-card-title">{{ row.realName || row.username || '-' }}</div>
+            <status-tag :status="row.status" kind="registration" />
+          </div>
+          <div class="m-card-meta">
+            <div><i class="el-icon-postcard"></i>{{ row.studentNo || '-' }} · {{ row.username || '-' }}</div>
+            <div v-if="row.phone"><i class="el-icon-mobile-phone"></i>{{ row.phone }}</div>
+            <div><i class="el-icon-time"></i>报名 {{ fmtDateTime(row.signupTime) }}</div>
+            <div v-if="row.checkinTime"><i class="el-icon-check"></i>签到 {{ fmtDateTime(row.checkinTime) }}（{{ checkinTypeText(row.checkinType) }}）</div>
+          </div>
+          <div class="m-card-actions">
+            <template v-if="row.status === 5">
+              <el-button size="mini" type="primary" @click="handleAudit(row, true)">通过</el-button>
+              <el-button size="mini" type="danger" plain @click="handleAudit(row, false)">驳回</el-button>
+            </template>
+            <el-button v-else-if="row.status === 1" size="mini" @click="handleManualCheckin(row)">补签</el-button>
+            <span v-else class="muted">无操作</span>
+          </div>
+        </div>
+        <div class="empty-box" v-if="!loading && !list.length">暂无报名记录</div>
+      </div>
 
       <div class="pager">
         <el-pagination

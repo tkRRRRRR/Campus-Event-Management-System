@@ -17,7 +17,7 @@
         <span class="muted">共 {{ list.length }} 个分类</span>
       </div>
 
-      <el-table v-loading="loading" :data="list" border stripe empty-text="暂无分类">
+      <el-table v-loading="loading" :data="list" border stripe empty-text="暂无分类" class="only-desktop">
         <el-table-column prop="name" label="分类名" min-width="220" />
         <el-table-column label="排序值" width="120" align="center">
           <template slot-scope="scope">{{ scope.row.sort == null ? 0 : scope.row.sort }}</template>
@@ -40,6 +40,26 @@
           </template>
         </el-table-column>
       </el-table>
+      <div class="only-mobile m-list">
+        <div class="m-card" v-for="row in list" :key="row.id">
+          <div class="m-card-head">
+            <div class="m-card-title">{{ row.name }}</div>
+            <el-switch
+              v-model="row.status"
+              :active-value="1"
+              :inactive-value="0"
+              :disabled="statusSavingId === row.id"
+              @change="handleStatusChange(row)" />
+          </div>
+          <div class="m-card-meta">排序值 {{ row.sort == null ? 0 : row.sort }} · {{ row.status === 1 ? '启用' : '停用' }}</div>
+          <div class="m-card-actions">
+            <el-button size="mini" @click="openEdit(row)">编辑</el-button>
+            <el-button size="mini" type="danger" plain @click="handleDelete(row)">删除</el-button>
+          </div>
+        </div>
+        <div class="empty-box" v-if="!loading && !list.length">暂无分类</div>
+      </div>
+
     </div>
 
     <el-dialog

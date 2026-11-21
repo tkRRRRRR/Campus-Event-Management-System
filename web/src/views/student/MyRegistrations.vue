@@ -22,7 +22,7 @@
         <span class="muted">共 {{ total }} 条报名记录</span>
       </div>
 
-      <el-table :data="list" v-loading="loading" stripe empty-text="暂无报名记录">
+      <el-table class="only-desktop" :data="list" v-loading="loading" stripe empty-text="暂无报名记录">
         <el-table-column label="活动" min-width="240">
           <template slot-scope="scope">
             <div class="act-cell">
@@ -95,6 +95,28 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="only-mobile m-list" v-loading="loading">
+        <div class="m-card" v-for="row in list" :key="row.id">
+          <div class="m-card-head">
+            <div class="m-card-title" @click="goDetail(row)">{{ row.activityTitle }}</div>
+            <status-tag :status="row.status" kind="registration" />
+          </div>
+          <div class="m-card-meta">
+            <div><i class="el-icon-time"></i> {{ fmtDateTime(row.startTime) }}</div>
+            <div><i class="el-icon-location-outline"></i> {{ row.location || '待定' }}</div>
+            <div><i class="el-icon-date"></i> 报名 {{ fmtDateTime(row.signupTime) }}</div>
+            <div v-if="row.checkinTime"><i class="el-icon-check"></i> 签到 {{ fmtDateTime(row.checkinTime) }}</div>
+          </div>
+          <div class="m-card-actions">
+            <el-button size="mini" @click="goDetail(row)">详情</el-button>
+            <el-button v-if="showCheckin(row)" size="mini" type="primary" @click="goDetail(row)">去签到</el-button>
+            <el-button v-if="showReview(row)" size="mini" type="primary" plain @click="goDetail(row)">去评价</el-button>
+            <el-button v-if="canCancel(row)" size="mini" type="danger" plain @click="handleCancel(row)">取消报名</el-button>
+          </div>
+        </div>
+        <div class="empty-box" v-if="!loading && !list.length">暂无报名记录</div>
+      </div>
 
       <div class="pager" v-if="total > 0">
         <el-pagination

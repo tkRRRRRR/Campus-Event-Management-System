@@ -27,7 +27,7 @@
         <span class="muted">共 {{ total }} 个用户</span>
       </div>
 
-      <el-table v-loading="loading" :data="list" border stripe empty-text="暂无用户">
+      <el-table v-loading="loading" :data="list" border stripe empty-text="暂无用户" class="only-desktop">
         <el-table-column label="头像" width="70" align="center">
           <template slot-scope="scope">
             <el-avatar :size="34" :src="resolveUrl(scope.row.avatar)">
@@ -87,6 +87,41 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="only-mobile m-list">
+        <div class="m-card" v-for="row in list" :key="row.id">
+          <div class="m-card-head">
+            <div class="m-card-title">
+              {{ row.realName || row.username }}
+              <el-tag size="mini" :type="roleTagType(row.role)" effect="light">{{ roleText(row.role) }}</el-tag>
+            </div>
+            <el-switch
+              v-model="row.status"
+              :active-value="1"
+              :inactive-value="0"
+              :disabled="isSelf(row) || statusSavingId === row.id"
+              @change="handleStatusChange(row)" />
+          </div>
+          <div class="m-card-meta">学号 {{ row.studentNo || '-' }} · {{ row.username }}</div>
+          <div class="m-card-meta">手机 {{ row.phone || '-' }}</div>
+          <div class="m-card-meta">
+            注册 {{ fmtDateTime(row.createTime) }}
+            <span v-if="row.violationCount > 0" class="warn-text">· 违约 {{ row.violationCount }} 次</span>
+          </div>
+          <div class="m-card-actions">
+            <el-dropdown trigger="click" @command="handleRoleCommand(row, $event)">
+              <el-button size="mini">改角色<i class="el-icon-arrow-down el-icon--right"></i></el-button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item command="STUDENT" :disabled="row.role === 'STUDENT'">学生</el-dropdown-item>
+                <el-dropdown-item command="ORGANIZER" :disabled="row.role === 'ORGANIZER'">组织者</el-dropdown-item>
+                <el-dropdown-item command="ADMIN" :disabled="row.role === 'ADMIN'">管理员</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+            <el-button size="mini" type="warning" plain @click="handleResetPassword(row)">重置密码</el-button>
+          </div>
+        </div>
+        <div class="empty-box" v-if="!loading && !list.length">暂无用户</div>
+      </div>
 
       <div class="pager" v-if="total > 0">
         <el-pagination
@@ -252,4 +287,5 @@ export default {
 .reset-text {
   color: #e6a23c;
 }
+.warn-text { color: #f56c6c; }
 </style>

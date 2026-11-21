@@ -7,7 +7,7 @@
         <span class="muted">共 {{ total }} 条评价</span>
       </div>
 
-      <el-table :data="list" v-loading="loading" stripe empty-text="还没有评价过任何活动">
+      <el-table :data="list" v-loading="loading" stripe class="only-desktop" empty-text="还没有评价过任何活动">
         <el-table-column label="活动名称" min-width="240">
           <template slot-scope="scope">
             <span class="act-link" @click="goActivity(scope.row)">{{ scope.row.activityTitle }}</span>
@@ -36,6 +36,21 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="only-mobile m-list" v-loading="loading">
+        <div class="m-card" v-for="row in list" :key="row.id">
+          <div class="m-card-head">
+            <span class="m-card-title" @click="goActivity(row)">{{ row.activityTitle }}</span>
+            <el-rate :value="Number(row.score) || 0" disabled></el-rate>
+          </div>
+          <div class="m-card-meta">{{ row.content || '未填写评价内容' }}</div>
+          <div class="m-card-meta">{{ fmtDateTime(row.createTime) }}</div>
+          <div class="m-card-actions">
+            <el-button type="text" size="mini" class="danger-text" @click="handleDelete(row)">删除</el-button>
+          </div>
+        </div>
+        <div class="empty-box" v-if="!list.length">还没有评价过任何活动</div>
+      </div>
 
       <div class="pager" v-if="total > 0">
         <el-pagination

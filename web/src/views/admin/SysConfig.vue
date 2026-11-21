@@ -16,7 +16,7 @@
         <el-button icon="el-icon-refresh" @click="loadList">刷新</el-button>
       </div>
 
-      <el-table v-loading="loading" :data="list" border stripe empty-text="暂无系统参数">
+      <el-table v-loading="loading" :data="list" border stripe empty-text="暂无系统参数" class="only-desktop">
         <el-table-column prop="configKey" label="参数键" width="230" show-overflow-tooltip />
         <el-table-column label="参数值" width="240">
           <template slot-scope="scope">
@@ -41,6 +41,20 @@
           </template>
         </el-table-column>
       </el-table>
+      <div class="only-mobile m-list">
+        <div class="m-card" v-for="row in list" :key="row.id">
+          <div class="m-card-head">
+            <div class="m-card-title">{{ row.remark || row.configKey }}</div>
+          </div>
+          <div class="m-card-meta">{{ row.configKey }}</div>
+          <div class="cfg-row">
+            <el-input v-model="row.configValue" size="small" placeholder="参数值" />
+            <el-button size="mini" type="primary" :loading="savingId === row.id" @click="handleSave(row)">保存</el-button>
+          </div>
+        </div>
+        <div class="empty-box" v-if="!loading && !list.length">暂无参数</div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -107,4 +121,6 @@ export default {
 .config-tip {
   margin-bottom: 14px;
 }
+.cfg-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.cfg-row .el-input { flex: 1; }
 </style>

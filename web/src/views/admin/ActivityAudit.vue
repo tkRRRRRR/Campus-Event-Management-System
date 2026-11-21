@@ -16,7 +16,7 @@
         :data="list"
         border
         stripe
-        empty-text="暂无待审核活动">
+        empty-text="暂无待审核活动" class="only-desktop">
         <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
         <el-table-column label="分类" width="110">
           <template slot-scope="scope">{{ scope.row.categoryName || '未分类' }}</template>
@@ -44,6 +44,25 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="only-mobile m-list">
+        <div class="m-card" v-for="row in list" :key="row.id">
+          <div class="m-card-head">
+            <div class="m-card-title">{{ row.title }}</div>
+            <el-tag size="mini" type="warning" effect="plain">待审核</el-tag>
+          </div>
+          <div class="m-card-meta">{{ row.categoryName || '未分类' }} · {{ row.organizerName || '-' }}</div>
+          <div class="m-card-meta">开始 {{ fmtDateTime(row.startTime) }}</div>
+          <div class="m-card-meta">名额 {{ row.capacity }} / 已报 {{ row.signedCount || 0 }}</div>
+          <div class="m-card-meta">提交 {{ fmtDateTime(row.createTime) }}</div>
+          <div class="m-card-actions">
+            <el-button size="mini" @click="openDetail(row)">详情</el-button>
+            <el-button size="mini" type="success" plain @click="confirmPass(row)">通过</el-button>
+            <el-button size="mini" type="danger" plain @click="openReject(row)">驳回</el-button>
+          </div>
+        </div>
+        <div class="empty-box" v-if="!loading && !list.length">暂无待审核活动</div>
+      </div>
 
       <div class="pager" v-if="total > 0">
         <el-pagination
