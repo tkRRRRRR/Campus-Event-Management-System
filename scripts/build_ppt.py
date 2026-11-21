@@ -414,11 +414,11 @@ def build():
 
     # 15 部署
     s = blank(prs)
-    title(s, "部署：一套代码，四种运行形态", "现场演示采用便携包，不依赖网络环境")
+    title(s, "部署：一套代码，四种运行形态", "现场演示用便携包；云端已部署于 Vercel 与 Render")
     forms = [("便携包", "jar 与内置 JRE\n解压后直接启动", "答辩现场"),
              ("本地 H2", "内存库自动建表并初始化数据\n重启即恢复", "开发调试"),
              ("本地 MySQL", "导入三段 SQL\n连接自有数据库", "课程验收"),
-             ("Render + Vercel", "Docker 部署后端\n前端静态托管", "预留配置")]
+             ("Vercel + Render", "前端 campus-activity-web\n后端 campus-activity-api", "已上线")]
     for i, (h, d, tag) in enumerate(forms):
         x = Inches(0.7) + i * Inches(3.05)
         rect(s, x, Inches(1.9), Inches(2.85), Inches(2.5), RGBColor(0xF6, 0xF9, 0xF8),
@@ -426,10 +426,13 @@ def build():
         text(s, h, x + Inches(0.22), Inches(2.05), Inches(2.4), Inches(0.45), 18, True, PRIMARY)
         text(s, d, x + Inches(0.22), Inches(2.55), Inches(2.45), Inches(1.2), 13, False, GREY)
         text(s, tag, x + Inches(0.22), Inches(3.9), Inches(2.4), Inches(0.4), 13, True, ORANGE)
+    text(s, "线上地址：前端 https://campus-activity-web.vercel.app　后端 https://campus-activity-api.onrender.com",
+         Inches(0.7), Inches(4.75), Inches(11.9), Inches(0.4), 14, True, PRIMARY)
     bullets(s, ["Dockerfile 多阶段构建，镜像内含 JRE，内存限制 256MB",
-                "数据库连接串与密钥全部走环境变量，仓库里不留明文"],
-            Inches(4.9), Inches(0.7), Inches(11.6), 16, 0.6)
-    notes(s, "现场以便携包演示；云端形态仅完成配置，未实际部署，详见论文 6.4 节。")
+                "数据库连接串与密钥全部走环境变量，仓库里不留明文",
+                "免费实例 15 分钟休眠，首次访问需 30~60 秒唤醒"],
+            Inches(5.3), Inches(0.7), Inches(11.6), 16, 0.62)
+    notes(s, "线上已实际部署并验证：登录、活动列表、名单导出均返回 200。免费实例会休眠，现场仍用便携包演示，详见论文 6.4 节与 doc/10 部署说明。")
 
     # 15 不足与展望
     s = blank(prs)
