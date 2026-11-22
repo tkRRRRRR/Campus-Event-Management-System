@@ -142,7 +142,7 @@
         <el-table-column label="操作" min-width="100">
           <template slot-scope="{ row }">
             <el-button
-              v-if="row.status === 1"
+              v-if="row.status === 1 || row.status === 4"
               type="text"
               size="mini"
               @click="handleManualCheckin(row)"
@@ -162,7 +162,7 @@
           <div class="m-card-meta">签到时间 {{ fmtDateTime(row.checkinTime) }}</div>
           <div class="m-card-meta">签到方式 {{ checkinTypeText(row.checkinType) }}</div>
           <div class="m-card-actions">
-            <el-button v-if="row.status === 1" size="mini" @click="handleManualCheckin(row)">补签</el-button>
+            <el-button v-if="row.status === 1 || row.status === 4" size="mini" @click="handleManualCheckin(row)">补签</el-button>
           </div>
         </div>
         <div class="empty-box" v-if="!list.length">暂无签到记录</div>

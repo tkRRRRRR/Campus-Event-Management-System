@@ -197,7 +197,11 @@ public class RegistrationServiceImpl implements RegistrationService {
         ActivityRegistration update = new ActivityRegistration();
         update.setId(registration.getId());
         update.setStatus(Constants.REG_CANCELED);
-        registrationMapper.updateById(update);
+        if (registrationMapper.update(update, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<ActivityRegistration>()
+                .eq(ActivityRegistration::getId, registration.getId())
+                .eq(ActivityRegistration::getStatus, registration.getStatus())) != 1) {
+            throw new BusinessException("报名状态已变化，请刷新后重试");
+        }
         log.info("取消报名: activityId={}, userId={}", activityId, userId);
     }
 
@@ -262,7 +266,11 @@ public class RegistrationServiceImpl implements RegistrationService {
                     "你报名的「" + activity.getTitle() + "」未通过组织者审核" + tail + "。",
                     Constants.NOTICE_AUDIT);
         }
-        registrationMapper.updateById(update);
+        if (registrationMapper.update(update, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<ActivityRegistration>()
+                .eq(ActivityRegistration::getId, registrationId)
+                .eq(ActivityRegistration::getStatus, Constants.REG_PENDING)) != 1) {
+            throw new BusinessException("报名状态已变化，请刷新后重试");
+        }
     }
 
     @Override

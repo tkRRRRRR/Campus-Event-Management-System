@@ -92,7 +92,7 @@
               <el-button type="text" size="mini" class="text-danger" @click="handleAudit(row, false)">驳回</el-button>
             </template>
             <el-button
-              v-else-if="row.status === 1"
+              v-else-if="row.status === 1 || row.status === 4"
               type="text"
               size="mini"
               @click="handleManualCheckin(row)"
@@ -119,7 +119,7 @@
               <el-button size="mini" type="primary" @click="handleAudit(row, true)">通过</el-button>
               <el-button size="mini" type="danger" plain @click="handleAudit(row, false)">驳回</el-button>
             </template>
-            <el-button v-else-if="row.status === 1" size="mini" @click="handleManualCheckin(row)">补签</el-button>
+            <el-button v-else-if="row.status === 1 || row.status === 4" size="mini" @click="handleManualCheckin(row)">补签</el-button>
             <span v-else class="muted">无操作</span>
           </div>
         </div>

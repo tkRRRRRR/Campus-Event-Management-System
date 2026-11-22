@@ -2,7 +2,7 @@
   <div class="login-page">
     <div class="brand">
       <h1>校园活动管理系统</h1>
-      <p>活动发布 · 在线报名 · 扫码签到 · 参与评价</p>
+      <p>活动发布 · 在线报名 · 签到码签到 · 参与评价</p>
       <ul>
         <li>名额并发安全，不会超卖</li>
         <li>签到码限时有效，爽约自动记录</li>
@@ -24,10 +24,7 @@
           <span>还没有账号？</span>
           <el-link type="primary" @click="$router.push('/register')">立即注册</el-link>
         </div>
-        <div class="demo">
-          <div>演示账号（密码均为 123456）</div>
-          <div>管理员 admin ｜ 组织者 2022010102 ｜ 学生 2023000201</div>
-        </div>
+
       </el-form>
     </div>
   </div>

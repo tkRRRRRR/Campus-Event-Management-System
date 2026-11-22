@@ -113,7 +113,7 @@
               plain
               class="block-btn"
               @click="openCheckin"
-            >扫码签到</el-button>
+            >输入签到码</el-button>
             <el-button
               v-if="!canRegister && !detail.regStatus"
               type="info"
@@ -216,7 +216,7 @@
     </div>
 
     <!-- 签到码弹窗 -->
-    <el-dialog title="扫码签到" :visible.sync="checkinVisible" width="380px" @closed="checkinCode = ''">
+    <el-dialog title="输入签到码" :visible.sync="checkinVisible" width="380px" @closed="checkinCode = ''">
       <div class="checkin-body">
         <p class="muted">请输入组织者提供的 6 位签到码</p>
         <el-input

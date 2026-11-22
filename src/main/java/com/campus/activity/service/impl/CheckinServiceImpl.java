@@ -253,7 +253,11 @@ public class CheckinServiceImpl implements CheckinService {
         if (activity.getStatus() != Constants.ACTIVITY_PUBLISHED) {
             throw new BusinessException("只有进行中的活动可以结束");
         }
-        return closeActivity(activity, LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(activity.getStartTime())) {
+            throw new BusinessException("活动尚未开始，不能结算爽约");
+        }
+        return closeActivity(activity, now);
     }
 
     @Override
@@ -274,19 +278,29 @@ public class CheckinServiceImpl implements CheckinService {
      * 事务由调用方控制（本类内部调用不经过代理，所以这里不能再加 @Transactional）。
      */
     private int closeActivity(Activity activity, LocalDateTime now) {
+        int closed = activityMapper.update(null, new LambdaUpdateWrapper<Activity>()
+                .set(Activity::getStatus, Constants.ACTIVITY_FINISHED)
+                .set(Activity::getUpdateTime, now)
+                .eq(Activity::getId, activity.getId())
+                .eq(Activity::getStatus, Constants.ACTIVITY_PUBLISHED));
+        if (closed != 1) return 0;
         List<Integer> absentUserIds = registrationMapper.selectUserIds(
                 activity.getId(), Constants.REG_SIGNED_UP);
 
+        int markedAbsent = 0;
         if (!absentUserIds.isEmpty()) {
-            registrationMapper.update(null, new LambdaUpdateWrapper<ActivityRegistration>()
-                    .set(ActivityRegistration::getStatus, Constants.REG_ABSENT)
-                    .set(ActivityRegistration::getUpdateTime, now)
-                    .eq(ActivityRegistration::getActivityId, activity.getId())
-                    .eq(ActivityRegistration::getStatus, Constants.REG_SIGNED_UP));
 
             int threshold = configInt(CFG_VIOLATION_LIMIT, 3);
             int banDays = configInt(CFG_BAN_DAYS, 30);
             for (Integer userId : absentUserIds) {
+                int changed = registrationMapper.update(null, new LambdaUpdateWrapper<ActivityRegistration>()
+                        .set(ActivityRegistration::getStatus, Constants.REG_ABSENT)
+                        .set(ActivityRegistration::getUpdateTime, now)
+                        .eq(ActivityRegistration::getActivityId, activity.getId())
+                        .eq(ActivityRegistration::getUserId, userId)
+                        .eq(ActivityRegistration::getStatus, Constants.REG_SIGNED_UP));
+                if (changed != 1) continue;
+                markedAbsent++;
                 userMapper.update(null, new LambdaUpdateWrapper<SysUser>()
                         .setSql("violation_count = violation_count + 1")
                         .set(SysUser::getUpdateTime, now)
@@ -314,13 +328,8 @@ public class CheckinServiceImpl implements CheckinService {
             }
         }
 
-        activityMapper.update(null, new LambdaUpdateWrapper<Activity>()
-                .set(Activity::getStatus, Constants.ACTIVITY_FINISHED)
-                .set(Activity::getUpdateTime, now)
-                .eq(Activity::getId, activity.getId()));
-
-        log.info("活动结束: activityId={}, 爽约人数={}", activity.getId(), absentUserIds.size());
-        return absentUserIds.size();
+        log.info("活动结束: activityId={}, 爽约人数={}", activity.getId(), markedAbsent);
+        return markedAbsent;
     }
 
     /** 补签后：违约次数低于阈值就解除封禁 */
